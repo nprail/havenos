@@ -47,17 +47,24 @@ app.post('/api/wake-word', (req, res) => {
   res.json({ ok: true });
 });
 
+const HA_IDENT_RE = /^[a-z0-9_]+$/;
+
 app.post('/api/ha/service', async (req, res) => {
   const { domain, service, data } = req.body as { domain: string; service: string; data: unknown };
+  if (typeof domain !== 'string' || typeof service !== 'string' || !HA_IDENT_RE.test(domain) || !HA_IDENT_RE.test(service)) {
+    res.status(400).json({ error: 'Invalid domain or service identifier' });
+    return;
+  }
   if (DEV_MODE) {
-    console.log(`[DEV] HA service call: ${domain}.${service}`, data);
+    console.log('[DEV] HA service call:', domain, service, data);
     res.json({ ok: true });
     return;
   }
   const cfg = readConfig();
+  const serviceUrl = new URL(`/api/services/${domain}/${service}`, cfg.ha.url).toString();
   try {
     const r = await axios.post(
-      `${cfg.ha.url}/api/services/${domain}/${service}`,
+      serviceUrl,
       data ?? {},
       { headers: { Authorization: `Bearer ${cfg.ha.token}` } }
     );
