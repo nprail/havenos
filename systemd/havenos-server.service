@@ -1,0 +1,15 @@
+[Unit]
+Description=havenOS Server
+After=network.target
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=/opt/havenos
+ExecStart=/usr/bin/node dist/server/index.js
+Restart=always
+RestartSec=2
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

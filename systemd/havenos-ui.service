@@ -1,0 +1,15 @@
+[Unit]
+Description=havenOS UI (Chromium kiosk)
+After=havenos-server.service graphical.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+User=%i
+Environment=DISPLAY=:0
+ExecStart=/usr/bin/chromium-browser --kiosk --noerror-dialogs --disable-infobars --no-first-run --app=http://localhost:3000
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=graphical.target
