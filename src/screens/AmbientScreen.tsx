@@ -15,6 +15,9 @@ export default function AmbientScreen() {
   }, []);
 
   const weatherEntity = ha.entities[settings.weather.entity];
+  const weatherForecast = weatherEntity
+    ? (weatherEntity.attributes.forecast as Array<{ temperature: number; templow?: number }> | undefined)
+    : undefined;
   const timers = Object.values(ha.entities).filter((e) => e.entity_id.startsWith('timer.') && e.state === 'active');
 
   return (
@@ -51,7 +54,7 @@ export default function AmbientScreen() {
               </span>
             </div>
             <div className="text-white/70 text-base">
-              H:{String(weatherEntity.attributes.temperature)}° L:{String((weatherEntity.attributes as Record<string, unknown>).templow ?? '--')}°
+              H:{String(weatherForecast?.[0]?.temperature ?? weatherEntity?.attributes.temperature ?? '--')}° L:{String(weatherForecast?.[0]?.templow ?? '--')}°
             </div>
           </div>
         </div>

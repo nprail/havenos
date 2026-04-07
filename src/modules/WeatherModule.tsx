@@ -13,6 +13,7 @@ export default function WeatherModule({ detail = false }: Props) {
   }
 
   const temp = entity.attributes.temperature as number;
+  const tempUnit = String(entity.attributes.temperature_unit ?? '°F');
   const condition = entity.state;
   const forecast = (entity.attributes.forecast as Array<{ datetime: string; condition: string; temperature: number; templow?: number }>) ?? [];
 
@@ -45,7 +46,7 @@ export default function WeatherModule({ detail = false }: Props) {
       <div className="flex items-center gap-6">
         <WeatherIcon condition={condition} size={80} />
         <div>
-          <div className="text-white text-6xl font-thin">{temp}°F</div>
+          <div className="text-white text-6xl font-thin">{temp}{tempUnit}</div>
           <div className="text-white/70 text-lg capitalize">{condition.replace(/-/g, ' ')}</div>
           <div className="text-white/50 text-sm mt-1">
             Humidity: {String(entity.attributes.humidity ?? '--')}% · Wind: {String(entity.attributes.wind_speed ?? '--')} mph
