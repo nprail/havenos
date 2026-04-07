@@ -3,6 +3,12 @@ import { useStore } from '../store';
 
 interface Props { detail?: boolean }
 
+// Display range for the circular temp gauge (°F)
+const TEMP_MIN = 60;
+const TEMP_MAX = 100;
+// Circle circumference: 2π × r where r = 80 → 2 × 3.14159 × 80 ≈ 502.7
+const CIRCUMFERENCE = 2 * Math.PI * 80;
+
 export default function ClimateModule({ detail = false }: Props) {
   const { ha, callService } = useStore();
   const climate = Object.values(ha.entities).find((e) => e.entity_id.startsWith('climate.'));
@@ -26,6 +32,9 @@ export default function ClimateModule({ detail = false }: Props) {
   }
 
   const modes = (climate.attributes.hvac_modes as string[] ?? []);
+  // Fraction of arc to fill based on clamped temperature within TEMP_MIN–TEMP_MAX range
+  const fraction = Math.max(0, Math.min(1, (currentTemp - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)));
+  const dashFilled = fraction * CIRCUMFERENCE;
 
   return (
     <div className="flex flex-col items-center gap-6 p-4">
@@ -33,7 +42,7 @@ export default function ClimateModule({ detail = false }: Props) {
         <svg width="192" height="192" viewBox="0 0 192 192">
           <circle cx="96" cy="96" r="80" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="12" />
           <circle cx="96" cy="96" r="80" fill="none" stroke="#3b82f6" strokeWidth="12"
-            strokeDasharray={`${((currentTemp - 60) / 40) * 502.7} 502.7`}
+            strokeDasharray={`${dashFilled} ${CIRCUMFERENCE}`}
             strokeLinecap="round" transform="rotate(-90 96 96)" />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
