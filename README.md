@@ -1,154 +1,163 @@
-# havenOS
+<p align="center">
+  <img src="assets/havenos-logo.svg" width="180" alt="havenOS logo" />
+</p>
 
-A fully local smart display for Raspberry Pi that connects to Home Assistant, displays a custom touch-first UI, and supports offline voice workflows.
+<h1 align="center">havenOS</h1>
+
+<p align="center">
+  A fully local, touch-first smart display for Raspberry Pi.<br />
+  Home Assistant powered. Offline voice ready. Zero cloud required.
+</p>
+
+<p align="center">
+  <a href="SPEC.md"><strong>Read Full Spec</strong></a>
+  ·
+  <a href="#installation-plan"><strong>Installation Plan</strong></a>
+  ·
+  <a href="#roadmap-v01"><strong>Roadmap</strong></a>
+</p>
+
+---
+
+## What Is havenOS?
+
+havenOS is a Nest Hub-style ambient display experience, built to run entirely on your local network. It runs in Chromium kiosk mode on a Raspberry Pi touchscreen, uses Home Assistant as a data/control bus, and renders a fully custom interface designed for glanceability and touch.
+
+## Project Status
+
+| Item | Value |
+|------|-------|
+| Version | 0.1 (draft) |
+| State | Pre-development |
+| Source of truth | [SPEC.md](SPEC.md) |
+| Current repo contents | Specification-first docs |
+
+## Why This Exists
+
+- Local-first by design: no cloud APIs, no cloud dependencies
+- Touch-first UX: large hit targets and appliance-style interactions
+- Ambient-first display: useful from across the room at a glance
+- Custom UI, not Lovelace for primary flows
+- Reliable, deterministic install target for Raspberry Pi OS Lite
 
 ## Installation Plan
 
-The installer is intentionally spec-first right now. Implementation should follow the requirements in the install script spec in [SPEC.md](SPEC.md).
+Implementation is intentionally spec-first right now and should follow [SPEC.md](SPEC.md).
 
-Target installer behavior:
+Installer goals:
 
 - One-command setup for Raspberry Pi OS Lite
 - Deterministic package and runtime bootstrap
 - Safe re-runs (idempotent behavior)
-- Local config bootstrap with clear post-install steps
+- Local configuration bootstrap with clear post-install instructions
 
-havenOS is designed as a Nest Hub-style ambient display without cloud dependencies. It runs in Chromium kiosk mode, uses Home Assistant as a data/control bus, and keeps rendering and interaction in a bespoke frontend.
+## System At A Glance
 
-## Status
+```mermaid
+flowchart LR
+    HA[Home Assistant] <--> UI[havenOS UI - React in Chromium kiosk]
+    UI <--> MA[Music Assistant REST + Sendspin WS]
+    UI <--> IM[Immich]
+    VA[linux-voice-assistant] <--> S[havenOS-server Node.js]
+    S <--> UI
+    S <--> HA
+    AP[shairport-sync] --> S
+    SS[sendspin] --> S
+```
 
-- Version: `0.1` (draft)
-- Project state: pre-development
-- Primary reference: [SPEC.md](SPEC.md)
+Runtime processes:
 
-## Core Goals
+1. havenOS-server (Node.js)
+2. havenOS-ui (Chromium kiosk)
+3. linux-voice-assistant
+4. shairport-sync
+5. sendspin
 
-- Local-only operation (no cloud APIs)
-- Touch-first interface designed for Raspberry Pi touchscreens
-- Ambient-first display that stays glanceable from across a room
-- Fully custom UI (no Lovelace dependency for core views)
-- Home Assistant integration via API, not UI embedding (except dedicated HA Dashboard page)
+## Planned Experience
 
-## Planned Feature Set
+Primary app states:
+
+1. ambient
+2. active
+3. listening
+4. detail
+5. ha_dashboard
+
+Key feature set:
 
 - Ambient photo slideshow with large clock and weather
 - Active dashboard with module cards and quick controls
-- Voice listening/processing/responding UI from local voice pipeline
-- Module detail overlays for weather, music, timers, lights, climate, cameras, and scenes
-- Embedded Home Assistant dashboard escape hatch in a full-screen iframe
+- Offline voice listening, processing, and response states
+- Full-screen detail overlays for core modules
+- Embedded Home Assistant dashboard escape hatch
 - Local broadcast announcements (visual + optional TTS)
-- Cast source support:
-  - AirPlay via `shairport-sync`
-  - Sendspin via `sendspin-cli`
+- Cast/audio source support via shairport-sync and sendspin-cli
 
 ## Hardware Target
 
 - Raspberry Pi 4 (4GB+)
-- 7"-10" HDMI touchscreen (target layout: 1280x800; graceful fallback: 1024x600)
+- 7"-10" HDMI touchscreen
+- Target layout: 1280x800 (graceful fallback to 1024x600)
 - ReSpeaker 2/4-mic input hardware
 - USB DAC or 3.5mm audio output path
 - Raspberry Pi OS Lite 64-bit
 
-## High-Level Architecture
-
-Runtime is split across four systemd-managed processes:
-
-1. `havenOS-server` (Node.js)
-2. `havenOS-ui` (Chromium kiosk)
-3. `linux-voice-assistant`
-4. `shairport-sync`
-5. `sendspin`
-
-Browser responsibilities:
-
-- UI rendering (React)
-- App state (Zustand)
-- HA entity subscriptions/service calls for most modules
-- Music browse and queue via Music Assistant REST API
-- Sendspin metadata/artwork/controller WebSocket roles
-- Photo retrieval from Immich API
-
-Server responsibilities (`havenOS-server`):
-
-- Serve static app from `dist/`
-- Read/write local config (`~/.havenOS/config.json`)
-- Brightness and wake-word control endpoints
-- Broadcast endpoint and browser event fanout (`/events`)
-- HA WebSocket sync for havenOS entities
-- Voice phase subscription via ESPHome API on `localhost:6053`
-- AirPlay metadata pipe watcher and Sendspin metadata sync
-- Active audio source arbitration
-
-## Technology Stack (Planned)
+## Planned Tech Stack
 
 - Frontend: React 18, Tailwind CSS v4, Framer Motion
 - State: Zustand
-- Data/query: TanStack Query
-- WebSockets: `react-use-websocket`
+- Data layer: TanStack Query
+- WebSockets: react-use-websocket
 - Build: Vite + TypeScript (strict)
-- Runtime browser: Chromium kiosk mode
 - Backend: Node.js
+- Runtime browser: Chromium kiosk mode
 
 ## Integrations
 
 ### Home Assistant
 
-- Connection: HA WebSocket API + long-lived token
-- Used for: entity subscriptions, service calls, and havenOS entity registration
-- Custom havenOS entities include:
-  - `media_player.havenos_display`
-  - `notify.havenos_display`
-  - `number.havenos_brightness`
-  - `switch.havenos_screen`
-  - `sensor.havenos_screen_state`
-  - `sensor.havenos_voice_state`
-  - `switch.havenos_wake_word`
-  - `button.havenos_next_photo`
-  - `sensor.havenos_current_photo`
-  - `sensor.havenos_active_source`
+- HA WebSocket API + long-lived token
+- Entity subscriptions and service calls
+- havenOS entities (planned):
+  - media_player.havenos_display
+  - notify.havenos_display
+  - number.havenos_brightness
+  - switch.havenos_screen
+  - sensor.havenos_screen_state
+  - sensor.havenos_voice_state
+  - switch.havenos_wake_word
+  - button.havenos_next_photo
+  - sensor.havenos_current_photo
+  - sensor.havenos_active_source
 
 ### Voice
 
-- Powered by `linux-voice-assistant` using ESPHome protocol
-- Wake word and phase updates are sourced locally from `localhost:6053`
-- Supports listening, processing, and responding visual phases in UI
+- linux-voice-assistant over local ESPHome protocol
+- Phase updates sourced from localhost:6053
 
 ### Photos
 
-- Source: Immich (local network)
-- Modes: album, favorites, all photos, date range
-- Fallback: if unavailable, ambient uses a dark background
+- Immich on local network
+- Fallback to dark ambient background if unavailable
 
 ### Music
 
-- Browse and queue: Music Assistant REST API (`:8095`)
-- Playback and realtime metadata/control: Sendspin roles
-- Additional source: AirPlay via `shairport-sync`
+- Music Assistant REST for browse/queue
+- Sendspin WebSocket roles for realtime metadata/control
+- AirPlay via shairport-sync
 
-## User Experience Model
+## Planned Local API Surface
 
-Primary screen states:
+havenOS-server local endpoints on http://localhost:3000:
 
-1. `ambient`
-2. `active`
-3. `listening`
-4. `detail`
-5. `ha_dashboard`
+- GET /api/config
+- POST /api/config
+- POST /api/brightness
+- POST /api/broadcast
+- POST /api/wake-word
+- WS /events
 
-Transitions are gesture and inactivity-driven, with progressive disclosure from ambient to detailed controls.
-
-## Local API Surface (Planned)
-
-`havenOS-server` exposes local endpoints on `http://localhost:3000`:
-
-- `GET /api/config`
-- `POST /api/config`
-- `POST /api/brightness`
-- `POST /api/broadcast`
-- `POST /api/wake-word`
-- `WS /events`
-
-Broadcast example:
+Broadcast payload example:
 
 ```json
 {
@@ -159,30 +168,17 @@ Broadcast example:
 }
 ```
 
-## Development Notes
+## Roadmap (v0.1)
 
-This repository currently contains the product specification and no implementation code yet.
+In scope:
 
-Expected near-term implementation structure:
+- Core dashboard and ambient experience
+- Local voice workflow UI
+- Weather, music, timers, and controls module framework
 
-- `src/` for React app
-- `server/` for Node.js backend process
-- `dist/` for built static assets served by backend
-- `systemd/` for service unit files
+Out of scope:
 
-## Performance Targets (Spec)
-
-- Cold start to ambient: `< 8s`
-- Touch to active transition: `< 100ms`
-- Wake word to listening visual: `< 300ms`
-- HA update to render: `< 50ms`
-- Ambient idle CPU: `< 5%`
-
-## Scope Boundaries (v0.1)
-
-Out of scope for initial version:
-
-- Video playback/services
+- Video playback services
 - Video calls
 - Automatic smart device onboarding
 - Multi-user profiles
@@ -190,14 +186,14 @@ Out of scope for initial version:
 - OTA update system
 - Multi-display orchestration
 
-## Open Questions Before Build
+## Open Questions
 
-- Exact linux-voice-assistant phase entity schema over ESPHome API
-- Timer naming/intents mapping in current HA Assist
-- On-screen keyboard approach for touch text input
-- Brightness control compatibility across HDMI touchscreen hardware
-- Immich version compatibility range and enforcement
+- linux-voice-assistant phase schema over ESPHome API
+- Timer naming/intents mapping in HA Assist
+- On-screen keyboard strategy for touch text entry
+- HDMI touchscreen brightness compatibility coverage
+- Immich version compatibility policy
 
-## Canonical Spec
+## Canonical Specification
 
-For complete behavior, module details, UI states, and implementation constraints, read [SPEC.md](SPEC.md).
+For complete behavior, module details, UI states, transitions, and constraints, read [SPEC.md](SPEC.md).
