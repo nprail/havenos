@@ -1,9 +1,9 @@
-import { motion } from 'framer-motion';
-import { useStore } from '../store';
+import { motion } from 'framer-motion'
+import { useStore } from '../store'
 
 export default function HaDashboard() {
-  const { navigate, settings } = useStore();
-  const haUrl = settings.ha.url || settings.haUrl;
+  const { navigate, settings } = useStore()
+  const haUrl = settings.ha.url || settings.haUrl
 
   return (
     <div className="absolute inset-0 bg-zinc-900 flex flex-col">
@@ -25,9 +25,13 @@ export default function HaDashboard() {
         />
       ) : (
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-white/50 text-center">No HA URL configured.<br/>Go to Settings to configure.</p>
+          <p className="text-white/50 text-center">
+            No HA URL configured.
+            <br />
+            Go to Settings to configure.
+          </p>
         </div>
       )}
     </div>
-  );
+  )
 }

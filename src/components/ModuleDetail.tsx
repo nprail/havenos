@@ -1,12 +1,12 @@
-import { motion } from 'framer-motion';
-import { useStore } from '../store';
-import WeatherModule from '../modules/WeatherModule';
-import MusicModule from '../modules/MusicModule';
-import TimersModule from '../modules/TimersModule';
-import LightsModule from '../modules/LightsModule';
-import ClimateModule from '../modules/ClimateModule';
-import CamerasModule from '../modules/CamerasModule';
-import ScenesModule from '../modules/ScenesModule';
+import { motion } from 'framer-motion'
+import { useStore } from '../store'
+import WeatherModule from '../modules/WeatherModule'
+import MusicModule from '../modules/MusicModule'
+import TimersModule from '../modules/TimersModule'
+import LightsModule from '../modules/LightsModule'
+import ClimateModule from '../modules/ClimateModule'
+import CamerasModule from '../modules/CamerasModule'
+import ScenesModule from '../modules/ScenesModule'
 
 const MODULE_TITLES: Record<string, string> = {
   weather: 'Weather',
@@ -16,10 +16,10 @@ const MODULE_TITLES: Record<string, string> = {
   climate: 'Climate',
   cameras: 'Cameras',
   scenes: 'Scenes',
-};
+}
 
 export default function ModuleDetail() {
-  const { activeModule, navigate } = useStore();
+  const { activeModule, navigate } = useStore()
 
   return (
     <div className="absolute inset-0 bg-zinc-900/95 backdrop-blur-xl flex flex-col">
@@ -31,7 +31,9 @@ export default function ModuleDetail() {
         >
           ‹
         </motion.button>
-        <h1 className="text-white text-2xl font-semibold">{MODULE_TITLES[activeModule ?? ''] ?? activeModule}</h1>
+        <h1 className="text-white text-2xl font-semibold">
+          {MODULE_TITLES[activeModule ?? ''] ?? activeModule}
+        </h1>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-6">
@@ -44,5 +46,5 @@ export default function ModuleDetail() {
         {activeModule === 'scenes' && <ScenesModule detail />}
       </div>
     </div>
-  );
+  )
 }

@@ -25,11 +25,11 @@ havenOS is a Nest Hub-style ambient display experience, built to run entirely on
 
 ## Project Status
 
-| Item | Value |
-|------|-------|
-| Version | 0.1 (draft) |
-| State | Pre-development |
-| Source of truth | [SPEC.md](SPEC.md) |
+| Item                  | Value                    |
+| --------------------- | ------------------------ |
+| Version               | 0.1 (draft)              |
+| State                 | Pre-development          |
+| Source of truth       | [SPEC.md](SPEC.md)       |
 | Current repo contents | Specification-first docs |
 
 ## Why This Exists

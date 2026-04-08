@@ -1,6 +1,6 @@
-import { motion } from 'framer-motion';
-import Waveform from '../components/Waveform';
-import { useStore } from '../store';
+import { motion } from 'framer-motion'
+import Waveform from '../components/Waveform'
+import { useStore } from '../store'
 
 const STATE_LABELS: Record<string, string> = {
   wake: 'Listening...',
@@ -8,15 +8,15 @@ const STATE_LABELS: Record<string, string> = {
   processing: 'Thinking...',
   responding: 'Responding',
   idle: 'Ready',
-};
+}
 
 export default function ListeningScreen() {
-  const { voice, navigate, setVoiceState } = useStore();
+  const { voice, navigate, setVoiceState } = useStore()
 
   const handleDismiss = () => {
-    setVoiceState('idle');
-    navigate('active');
-  };
+    setVoiceState('idle')
+    navigate('active')
+  }
 
   return (
     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-end pb-12">
@@ -56,5 +56,5 @@ export default function ListeningScreen() {
         )}
       </motion.div>
     </div>
-  );
+  )
 }
