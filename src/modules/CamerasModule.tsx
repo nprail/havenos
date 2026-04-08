@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../store'
 
@@ -9,12 +9,26 @@ interface Props {
 export default function CamerasModule({ detail = false }: Props) {
   const { ha, settings } = useStore()
   const [selected, setSelected] = useState<string | null>(null)
+  const [tick, setTick] = useState(0)
+
+  useEffect(() => {
+    if (!detail) return
+    const interval = setInterval(() => setTick((t) => t + 1), 1000)
+    return () => clearInterval(interval)
+  }, [detail])
+
   const cameras = Object.values(ha.entities).filter((e) =>
     e.entity_id.startsWith('camera.'),
   )
 
-  const cameraUrl = (entityId: string) =>
-    `${settings.ha.url}/api/camera_proxy/${entityId}?token=${settings.ha.token}`
+  const accessToken = (entityId: string) =>
+    (ha.entities[entityId]?.attributes?.access_token as string | undefined) ?? ''
+
+  const thumbnailUrl = (entityId: string) =>
+    `${settings.ha.url}/api/camera_proxy/${entityId}?token=${accessToken(entityId)}&_t=${tick}`
+
+  const streamUrl = (entityId: string) =>
+    `${settings.ha.url}/api/camera_proxy_stream/${entityId}?token=${accessToken(entityId)}`
 
   if (!detail) {
     return (
@@ -37,7 +51,7 @@ export default function CamerasModule({ detail = false }: Props) {
             whileTap={{ scale: 0.97 }}
           >
             <img
-              src={cameraUrl(cam.entity_id)}
+              src={thumbnailUrl(cam.entity_id)}
               alt={String(cam.attributes.friendly_name ?? cam.entity_id)}
               className="w-full h-full object-cover"
               onError={(e) => {
@@ -59,7 +73,7 @@ export default function CamerasModule({ detail = false }: Props) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="flex items-center p-4">
+            <div className="flex items-center justify-between p-4 flex-shrink-0">
               <motion.button
                 className="w-10 h-10 bg-white/10 rounded-full text-white text-xl flex items-center justify-center"
                 onPointerDown={() => setSelected(null)}
@@ -67,9 +81,16 @@ export default function CamerasModule({ detail = false }: Props) {
               >
                 ‹
               </motion.button>
+              <p className="text-white/70 text-sm">
+                {String(
+                  ha.entities[selected]?.attributes.friendly_name ?? selected,
+                )}
+              </p>
+              <div className="w-10" />
             </div>
+            {/* MJPEG stream — browsers load this natively as a continuous stream */}
             <img
-              src={cameraUrl(selected)}
+              src={streamUrl(selected)}
               alt=""
               className="flex-1 object-contain"
             />

@@ -1,5 +1,18 @@
+import {
+  createConnection,
+  createLongLivedTokenAuth,
+  callService,
+  getStates,
+  type Connection,
+  type StateChangedEvent,
+} from 'home-assistant-js-websocket'
 import WebSocket from 'ws'
 import { broadcast } from './events'
+
+// Polyfill WebSocket for Node.js (home-assistant-js-websocket expects a browser-like global)
+if (!('WebSocket' in globalThis)) {
+  Object.assign(globalThis, { WebSocket })
+}
 
 const HA_DEV_MODE = process.env.HA_DEV_MODE === 'true'
 
@@ -142,12 +155,37 @@ export const MOCK_ENTITIES: Record<string, unknown> = {
   },
 }
 
+export const MOCK_AREAS = [
+  { area_id: 'living_room', name: 'Living Room' },
+  { area_id: 'bedroom', name: 'Bedroom' },
+  { area_id: 'kitchen', name: 'Kitchen' },
+]
+
+export const MOCK_ENTITY_REGISTRY = [
+  { entity_id: 'light.living_room', area_id: 'living_room' },
+  { entity_id: 'light.bedroom', area_id: 'bedroom' },
+  { entity_id: 'light.kitchen', area_id: 'kitchen' },
+]
+
+let haConn: Connection | null = null
+
+export async function callHaService(
+  domain: string,
+  service: string,
+  data?: Record<string, unknown>,
+): Promise<void> {
+  if (!haConn) throw new Error('[ha-client] Not connected to HA')
+  await callService(haConn, domain, service, data)
+}
+
 export function startHaClient(haUrl: string, token: string): void {
   console.log('[ha-client] Starting HA client with URL:', haUrl)
   if (HA_DEV_MODE) {
     console.log('[DEV] HA client mocked — sending mock entity state')
     setTimeout(() => {
       broadcast({ type: 'ha_states', payload: Object.values(MOCK_ENTITIES) })
+      broadcast({ type: 'ha_areas', payload: MOCK_AREAS })
+      broadcast({ type: 'ha_entity_registry', payload: MOCK_ENTITY_REGISTRY })
     }, 500)
     setInterval(() => {
       broadcast({ type: 'ha_states', payload: Object.values(MOCK_ENTITIES) })
@@ -160,47 +198,51 @@ export function startHaClient(haUrl: string, token: string): void {
     return
   }
 
-  let msgId = 1
+  const auth = createLongLivedTokenAuth(haUrl, token)
 
-  function connect() {
-    const wsUrl = haUrl.replace(/^http/, 'ws') + '/api/websocket'
-    const ws = new WebSocket(wsUrl)
+  async function setup(): Promise<void> {
+    try {
+      const conn = await createConnection({ auth })
+      haConn = conn
+      console.log('[ha-client] connected')
 
-    ws.on('open', () => console.log('[ha-client] connected'))
-    ws.on('close', () => {
-      setTimeout(connect, 5000)
-    })
-    ws.on('error', (e) => console.error('[ha-client] error:', e.message))
-    ws.on('message', (raw) => {
-      try {
-        const msg = JSON.parse(raw.toString()) as {
-          type: string
-          result?: unknown
-          event?: { event_type: string; data: unknown }
-        }
-        if (msg.type === 'auth_required') {
-          ws.send(JSON.stringify({ type: 'auth', access_token: token }))
-        } else if (msg.type === 'auth_ok') {
-          ws.send(JSON.stringify({ id: msgId++, type: 'get_states' }))
-          ws.send(
-            JSON.stringify({
-              id: msgId++,
-              type: 'subscribe_events',
-              event_type: 'state_changed',
-            }),
-          )
-        } else if (msg.type === 'result' && msg.result) {
-          broadcast({ type: 'ha_states', payload: msg.result })
-        } else if (
-          msg.type === 'event' &&
-          msg.event?.event_type === 'state_changed'
-        ) {
-          broadcast({ type: 'ha_state_changed', payload: msg.event.data })
-        }
-      } catch (e) {
-        console.warn('[ha-client] failed to parse message:', raw.toString(), e)
+      async function fetchAndBroadcastAll(): Promise<void> {
+        const [states, areas, entityRegistry] = await Promise.all([
+          getStates(conn),
+          conn.sendMessagePromise<unknown[]>({ type: 'config/area_registry/list' }),
+          conn.sendMessagePromise<unknown[]>({ type: 'config/entity_registry/list' }),
+        ])
+        broadcast({ type: 'ha_states', payload: states })
+        broadcast({ type: 'ha_areas', payload: areas })
+        broadcast({ type: 'ha_entity_registry', payload: entityRegistry })
       }
-    })
+
+      // Fetch initial state snapshot
+      await fetchAndBroadcastAll()
+
+      // Re-fetch full state on every reconnect
+      conn.addEventListener('ready', () => {
+        console.log('[ha-client] reconnected')
+        fetchAndBroadcastAll().catch(console.error)
+      })
+
+      conn.addEventListener('disconnected', () => {
+        console.log('[ha-client] disconnected — will reconnect automatically')
+      })
+
+      // Stream incremental state changes
+      await conn.subscribeEvents<StateChangedEvent>(
+        (event) => {
+          broadcast({ type: 'ha_state_changed', payload: event.data })
+        },
+        'state_changed',
+      )
+    } catch (e) {
+      console.error('[ha-client] connection failed, retrying in 5s:', e)
+      haConn = null
+      setTimeout(() => void setup(), 5000)
+    }
   }
-  connect()
+
+  void setup()
 }

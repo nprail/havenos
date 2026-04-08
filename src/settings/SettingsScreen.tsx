@@ -132,58 +132,92 @@ export default function SettingsScreen() {
                 setForm((f) => ({ ...f, weather: { entity: v } }))
               }
             />
+            <ClimateEntityPicker form={form} setForm={setForm} />
           </div>
         )}
 
         {tab === 'photos' && (
           <div className="flex flex-col gap-4">
-            <Field
-              label="Immich URL"
-              value={form.immich.url}
-              onChange={(v) =>
-                setForm((f) => ({ ...f, immich: { ...f.immich, url: v } }))
-              }
-            />
-            <Field
-              label="Immich API Key"
-              value={form.immich.apiKey}
-              onChange={(v) =>
-                setForm((f) => ({ ...f, immich: { ...f.immich, apiKey: v } }))
-              }
-              type="password"
-            />
-            <Toggle
-              label="Favorites Only"
-              value={form.immich.isFavorite ?? true}
+            <Select
+              label="Photo Source"
+              value={form.photoSource ?? 'auto'}
+              options={[
+                {
+                  value: 'auto',
+                  label: 'Auto (NASA if Immich not configured)',
+                },
+                { value: 'nasa', label: 'NASA Image Archive' },
+                { value: 'immich', label: 'Immich' },
+              ]}
               onChange={(v) =>
                 setForm((f) => ({
                   ...f,
-                  immich: { ...f.immich, isFavorite: v },
+                  photoSource: v as 'auto' | 'immich' | 'nasa',
                 }))
               }
             />
-            <Select
-              label="Source"
-              value={form.immich.mode}
-              options={[
-                { value: 'favorites', label: 'Favorites / Whole Library' },
-                { value: 'album', label: 'Album' },
-              ]}
-              onChange={(v) =>
-                setForm((f) => ({ ...f, immich: { ...f.immich, mode: v } }))
-              }
-            />
-            {form.immich.mode === 'album' && (
+            {(form.photoSource === 'nasa' ||
+              form.photoSource === 'auto' ||
+              !form.photoSource) && (
               <Field
-                label="Album ID"
-                value={form.immich.albumId}
+                label="NASA Search Query"
+                value={form.nasa?.query ?? 'nebula galaxy earth astronaut space'}
                 onChange={(v) =>
-                  setForm((f) => ({
-                    ...f,
-                    immich: { ...f.immich, albumId: v },
-                  }))
+                  setForm((f) => ({ ...f, nasa: { ...f.nasa, query: v } }))
                 }
               />
+            )}
+            {(form.photoSource === 'immich' || form.photoSource === 'auto' || !form.photoSource) && (
+              <>
+                <Field
+                  label="Immich URL"
+                  value={form.immich.url}
+                  onChange={(v) =>
+                    setForm((f) => ({ ...f, immich: { ...f.immich, url: v } }))
+                  }
+                />
+                <Field
+                  label="Immich API Key"
+                  value={form.immich.apiKey}
+                  onChange={(v) =>
+                    setForm((f) => ({ ...f, immich: { ...f.immich, apiKey: v } }))
+                  }
+                  type="password"
+                />
+                <Toggle
+                  label="Favorites Only"
+                  value={form.immich.isFavorite ?? true}
+                  onChange={(v) =>
+                    setForm((f) => ({
+                      ...f,
+                      immich: { ...f.immich, isFavorite: v },
+                    }))
+                  }
+                />
+                <Select
+                  label="Immich Source"
+                  value={form.immich.mode}
+                  options={[
+                    { value: 'favorites', label: 'Favorites / Whole Library' },
+                    { value: 'album', label: 'Album' },
+                  ]}
+                  onChange={(v) =>
+                    setForm((f) => ({ ...f, immich: { ...f.immich, mode: v } }))
+                  }
+                />
+                {form.immich.mode === 'album' && (
+                  <Field
+                    label="Album ID"
+                    value={form.immich.albumId}
+                    onChange={(v) =>
+                      setForm((f) => ({
+                        ...f,
+                        immich: { ...f.immich, albumId: v },
+                      }))
+                    }
+                  />
+                )}
+              </>
             )}
           </div>
         )}
@@ -340,6 +374,62 @@ function Select({
           </option>
         ))}
       </select>
+    </div>
+  )
+}
+
+function ClimateEntityPicker({
+  form,
+  setForm,
+}: {
+  form: AppSettings
+  setForm: React.Dispatch<React.SetStateAction<AppSettings>>
+}) {
+  const { ha } = useStore()
+  const availableClimates = Object.values(ha.entities).filter((e) =>
+    e.entity_id.startsWith('climate.'),
+  )
+  const selected = form.climate?.entities ?? []
+
+  const toggle = (entityId: string) => {
+    const next = selected.includes(entityId)
+      ? selected.filter((id) => id !== entityId)
+      : [...selected, entityId]
+    setForm((f) => ({ ...f, climate: { entities: next } }))
+  }
+
+  if (availableClimates.length === 0) {
+    return (
+      <Field
+        label="Climate Entities"
+        value={selected.join(', ')}
+        onChange={(v) =>
+          setForm((f) => ({
+            ...f,
+            climate: { entities: v.split(',').map((s) => s.trim()).filter(Boolean) },
+          }))
+        }
+      />
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-white/50 text-xs uppercase tracking-wide">
+        Climate Entities
+      </label>
+      <p className="text-white/30 text-xs">Select which entities to show (all shown if none selected)</p>
+      {availableClimates.map((e) => {
+        const name = (e.attributes.friendly_name as string) ?? e.entity_id
+        return (
+          <Toggle
+            key={e.entity_id}
+            label={name}
+            value={selected.includes(e.entity_id)}
+            onChange={() => toggle(e.entity_id)}
+          />
+        )
+      })}
     </div>
   )
 }

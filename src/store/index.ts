@@ -14,6 +14,16 @@ export interface HAEntity {
   attributes: Record<string, unknown>
 }
 
+export interface HAArea {
+  area_id: string
+  name: string
+}
+
+export interface HAEntityRegistryEntry {
+  entity_id: string
+  area_id: string | null
+}
+
 export interface NowPlaying {
   source: 'airplay' | 'ma' | null
   state: 'playing' | 'paused' | 'idle'
@@ -40,6 +50,9 @@ export interface AppSettings {
     albumId: string
     isFavorite: boolean
   }
+  nasa: {
+    query: string
+  }
   display: {
     name: string
     brightness: number
@@ -49,14 +62,16 @@ export interface AppSettings {
     accentColor: string
   }
   timers: { chimeFile: string; chimeVolume: number }
+  climate: { entities: string[] }
   cycleInterval: number
+  photoSource: 'auto' | 'immich' | 'nasa'
   haUrl: string
 }
 
 interface HavenStore {
   screen: Screen
   activeModule: string | null
-  ha: { connected: boolean; stale: boolean; entities: Record<string, HAEntity> }
+  ha: { connected: boolean; stale: boolean; entities: Record<string, HAEntity>; areas: HAArea[]; entityRegistry: Record<string, string> }
   voice: {
     state: 'idle' | 'wake' | 'listening' | 'processing' | 'responding'
     transcript: string
@@ -75,6 +90,8 @@ interface HavenStore {
   navigate: (screen: Screen, module?: string) => void
   setHaEntities: (entities: HAEntity[]) => void
   updateHaEntity: (entity: HAEntity) => void
+  setHaAreas: (areas: HAArea[]) => void
+  setHaEntityRegistry: (entries: HAEntityRegistryEntry[]) => void
   setVoiceState: (
     state: HavenStore['voice']['state'],
     transcript?: string,
@@ -85,6 +102,8 @@ interface HavenStore {
   queueBroadcast: (msg: { message: string; duration: number }) => void
   dismissBroadcast: () => void
   setPhoto: (url: string) => void
+  photoNav: { dir: 'next' | 'prev' | null; id: number }
+  triggerPhotoNav: (dir: 'next' | 'prev') => void
   setSettings: (s: AppSettings) => void
   callService: (
     domain: string,
@@ -96,7 +115,7 @@ interface HavenStore {
 export const useStore = create<HavenStore>((set) => ({
   screen: 'ambient',
   activeModule: null,
-  ha: { connected: false, stale: false, entities: {} },
+  ha: { connected: false, stale: false, entities: {}, areas: [], entityRegistry: {} },
   voice: { state: 'idle', transcript: '', response: '', wakeWordEnabled: true },
   nowPlaying: {
     source: null,
@@ -114,6 +133,7 @@ export const useStore = create<HavenStore>((set) => ({
   display: { brightness: 100, screenOn: true },
   broadcasts: { queue: [], current: null },
   photos: { current: null, queue: [] },
+  photoNav: { dir: null, id: 0 },
   settings: {
     ha: { url: 'http://homeassistant.local:8123', token: '' },
     weather: { entity: 'weather.home' },
@@ -126,6 +146,9 @@ export const useStore = create<HavenStore>((set) => ({
       albumId: '',
       isFavorite: true,
     },
+    nasa: {
+      query: 'nebula galaxy earth astronaut space',
+    },
     display: {
       name: 'havenOS Display',
       brightness: 100,
@@ -135,7 +158,9 @@ export const useStore = create<HavenStore>((set) => ({
       accentColor: 'blue',
     },
     timers: { chimeFile: '', chimeVolume: 80 },
+    climate: { entities: [] },
     cycleInterval: 60,
+    photoSource: 'auto',
     haUrl: '',
   },
 
@@ -156,6 +181,16 @@ export const useStore = create<HavenStore>((set) => ({
         entities: { ...s.ha.entities, [entity.entity_id]: entity },
       },
     })),
+
+  setHaAreas: (areas) => set((s) => ({ ha: { ...s.ha, areas } })),
+
+  setHaEntityRegistry: (entries) => {
+    const registry: Record<string, string> = {}
+    entries.forEach((e) => {
+      if (e.area_id) registry[e.entity_id] = e.area_id
+    })
+    set((s) => ({ ha: { ...s.ha, entityRegistry: registry } }))
+  },
 
   setVoiceState: (state, transcript = '', response = '') =>
     set((s) => ({
@@ -198,6 +233,9 @@ export const useStore = create<HavenStore>((set) => ({
     }),
 
   setPhoto: (url) => set((s) => ({ photos: { ...s.photos, current: url } })),
+
+  triggerPhotoNav: (dir) =>
+    set((s) => ({ photoNav: { dir, id: s.photoNav.id + 1 } })),
 
   setSettings: (settings) => {
     set({ settings })

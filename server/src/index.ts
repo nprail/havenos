@@ -1,7 +1,6 @@
 import express from 'express'
 import http from 'http'
 import path from 'path'
-import axios from 'axios'
 import {
   init as initImmich,
   searchAssets,
@@ -13,7 +12,7 @@ import {
 import { readConfig, writeConfig } from './config'
 import { setupEventHub, broadcast } from './events'
 import { setBrightness } from './brightness'
-import { startHaClient } from './ha-client'
+import { startHaClient, callHaService } from './ha-client'
 import { createESPhomeClient } from './esphome'
 
 const DEV_MODE =
@@ -87,16 +86,13 @@ app.post('/api/ha/service', async (req, res) => {
     res.json({ ok: true })
     return
   }
-  const cfg = readConfig()
-  const serviceUrl = new URL(
-    `/api/services/${domain}/${service}`,
-    cfg.ha.url,
-  ).toString()
   try {
-    const r = await axios.post(serviceUrl, data ?? {}, {
-      headers: { Authorization: `Bearer ${cfg.ha.token}` },
-    })
-    res.json(r.data)
+    await callHaService(
+      domain,
+      service,
+      data as Record<string, unknown> | undefined,
+    )
+    res.json({ ok: true })
   } catch (e) {
     res.status(500).json({ error: String(e) })
   }
@@ -126,7 +122,7 @@ app.get('/api/immich/photos', async (_req, res) => {
         metadataSearchDto: {
           isFavorite: cfg.immich.isFavorite === false ? undefined : true,
           type: AssetTypeEnum.Image,
-          size: 50,
+          size: 1000,
         },
       })
       res.json(result.assets.items.map((a) => a.id))
@@ -154,6 +150,48 @@ app.get('/api/immich/thumbnail/:id', async (req, res) => {
     res.set('Cache-Control', 'public, max-age=86400')
     res.send(buffer)
   } catch (e) {
+    res.status(502).json({ error: String(e) })
+  }
+})
+
+interface NasaSearchItem {
+  links?: Array<{ href: string; rel: string; render?: string }>
+  data: Array<{ [key: string]: unknown }>
+}
+
+interface NasaSearchResponse {
+  collection: {
+    items: NasaSearchItem[]
+  }
+}
+
+app.get('/api/nasa/photos', async (_req, res) => {
+  const cfg = readConfig()
+  const query = cfg.nasa?.query || 'space'
+  try {
+    const apiUrl = `https://images-api.nasa.gov/asset/?orderby=popular&q=${encodeURIComponent(query)}&media_type=image&page_size=100&year_start=2025`
+    const resp = await fetch(apiUrl)
+    if (!resp.ok) {
+      res.status(502).json({ error: 'NASA API error' })
+      return
+    }
+    const data = (await resp.json()) as NasaSearchResponse
+    const urls: string[] = []
+    for (const item of data.collection.items) {
+      if (item.data[0].media_type !== 'image') continue
+
+      const preview = item.links?.find(
+        (l) => l.rel === 'preview' && l.render === 'image',
+      )
+      if (preview?.href) {
+        // Replace thumbnail suffix with large for higher resolution
+        urls.push(preview.href.replace('~thumb.jpg', '~large.jpg'))
+      }
+    }
+    res.set('Cache-Control', 'public, max-age=3600')
+    res.json(urls)
+  } catch (e) {
+    console.log('NASA API error', e)
     res.status(502).json({ error: String(e) })
   }
 })

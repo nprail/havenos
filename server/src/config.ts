@@ -14,6 +14,9 @@ export interface AppConfig {
     albumId: string
     isFavorite: boolean
   }
+  nasa: {
+    query: string
+  }
   display: {
     name: string
     brightness: number
@@ -23,7 +26,9 @@ export interface AppConfig {
     accentColor: string
   }
   timers: { chimeFile: string; chimeVolume: number }
+  climate: { entities: string[] }
   cycleInterval: number
+  photoSource: 'auto' | 'immich' | 'nasa'
   haUrl: string
 }
 
@@ -42,6 +47,9 @@ const DEFAULT_CONFIG: AppConfig = {
     albumId: '',
     isFavorite: true,
   },
+  nasa: {
+    query: 'nebula galaxy earth astronaut space',
+  },
   display: {
     name: 'havenOS Display',
     brightness: 100,
@@ -51,7 +59,9 @@ const DEFAULT_CONFIG: AppConfig = {
     accentColor: 'blue',
   },
   timers: { chimeFile: '', chimeVolume: 80 },
+  climate: { entities: [] },
   cycleInterval: 60,
+  photoSource: 'auto',
   haUrl: '',
 }
 
