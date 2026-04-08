@@ -27,7 +27,7 @@ export interface AppSettings {
   weather: { entity: string };
   music: { maUrl: string; playerId: string };
   voice: { host: string; port: number };
-  immich: { url: string; apiKey: string; mode: string; albumId: string };
+  immich: { url: string; apiKey: string; mode: string; albumId: string; isFavorite: boolean };
   display: { name: string; brightness: number; quietHoursStart: string; quietHoursEnd: string; theme: string; accentColor: string };
   timers: { chimeFile: string; chimeVolume: number };
   cycleInterval: number;
@@ -72,7 +72,7 @@ export const useStore = create<HavenStore>((set) => ({
     weather: { entity: 'weather.home' },
     music: { maUrl: 'http://musicassistant.local:8095', playerId: '' },
     voice: { host: 'localhost', port: 6053 },
-    immich: { url: 'http://immich.local:2283', apiKey: '', mode: 'favorites', albumId: '' },
+    immich: { url: 'http://immich.local:2283', apiKey: '', mode: 'favorites', albumId: '', isFavorite: true },
     display: { name: 'havenOS Display', brightness: 100, quietHoursStart: '22:00', quietHoursEnd: '07:00', theme: 'auto', accentColor: 'blue' },
     timers: { chimeFile: '', chimeVolume: 80 },
     cycleInterval: 60,
