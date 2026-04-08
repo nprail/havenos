@@ -127,3 +127,8 @@ export const useStore = create<HavenStore>((set) => ({
     });
   },
 }));
+
+// Expose store in dev mode for testing/debugging
+if (import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).__havenStore = useStore;
+}

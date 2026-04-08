@@ -81,6 +81,18 @@ const cfg = readConfig();
 startHaClient(cfg.ha.url, cfg.ha.token);
 
 if (DEV_MODE) {
+  // Dev-only endpoint to manually trigger voice events for demo/testing
+  app.post('/api/dev/voice', (req, res) => {
+    const { type, payload } = req.body as { type: string; payload?: unknown };
+    const allowed = ['voice_wake', 'voice_transcript', 'voice_response', 'voice_done'];
+    if (!allowed.includes(type)) {
+      res.status(400).json({ error: 'Unknown event type' });
+      return;
+    }
+    broadcast({ type, payload: payload ?? {} });
+    res.json({ ok: true });
+  });
+
   let demoStep = 0;
   setInterval(() => {
     demoStep++;
