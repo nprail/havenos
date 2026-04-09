@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>havenOS — Local Smart Display for Raspberry Pi</title>
+    <meta
+      name="description"
+      content="A fully local, touch-first smart display for Raspberry Pi. Home Assistant powered. Offline voice ready. Zero cloud required."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              haven: {
+                bg: '#0C1B2A',
+                bg2: '#0F2234',
+                surface: '#142D3E',
+                border: '#1E3F52',
+                teal: '#4DD6C0',
+                teal2: '#2A9D8F',
+                gold: '#F6BD60',
+                gold2: '#EE964B',
+                text: '#ECF4F3',
+                muted: '#8BAFBF',
+              },
+            },
+            fontFamily: {
+              sans: [
+                'Space Grotesk',
+                'Inter',
+                'system-ui',
+                'sans-serif',
+              ],
+            },
+            backgroundImage: {
+              'haven-radial':
+                'radial-gradient(ellipse at 60% 0%, #143B4A 0%, #0C1B2A 60%)',
+            },
+          },
+        },
+      }
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #0c1b2a;
+        color: #ecf4f3;
+        font-family: 'Space Grotesk', Inter, system-ui, sans-serif;
+      }
+      .glow-teal {
+        box-shadow: 0 0 32px 0 rgba(77, 214, 192, 0.18);
+      }
+      .glow-gold {
+        box-shadow: 0 0 24px 0 rgba(246, 189, 96, 0.2);
+      }
+      .code-block {
+        background: #0a1622;
+        border: 1px solid #1e3f52;
+      }
+    </style>
+  </head>
+  <body class="antialiased">
+    <!-- Nav -->
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-haven-border backdrop-blur-md bg-haven-bg/80">
+      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="assets/havenos-logo.svg" alt="havenOS" class="w-8 h-8" />
+          <span class="font-bold text-haven-text text-lg tracking-tight">havenOS</span>
+        </div>
+        <div class="flex items-center gap-6">
+          <a href="#features" class="text-haven-muted hover:text-haven-teal transition-colors text-sm font-medium hidden sm:block">Features</a>
+          <a href="#modules" class="text-haven-muted hover:text-haven-teal transition-colors text-sm font-medium hidden sm:block">Modules</a>
+          <a href="#install" class="text-haven-muted hover:text-haven-teal transition-colors text-sm font-medium hidden sm:block">Install</a>
+          <a
+            href="https://github.com/nprail/havenos"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-haven-border text-haven-muted hover:border-haven-teal hover:text-haven-teal transition-all text-sm font-medium"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="relative min-h-screen flex items-center justify-center px-6 pt-16 overflow-hidden bg-haven-radial">
+      <!-- Background glow orbs -->
+      <div class="absolute inset-0 pointer-events-none">
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-haven-teal2/5 blur-3xl"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-haven-gold/5 blur-3xl"></div>
+      </div>
+
+      <div class="relative max-w-4xl mx-auto text-center">
+        <div class="flex justify-center mb-8">
+          <img
+            src="assets/havenos-logo.svg"
+            alt="havenOS logo"
+            class="w-28 h-28 glow-teal rounded-3xl"
+          />
+        </div>
+
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-haven-teal/30 bg-haven-teal/5 text-haven-teal text-xs font-medium mb-6">
+          <span class="w-1.5 h-1.5 rounded-full bg-haven-teal animate-pulse"></span>
+          Fully Local &nbsp;·&nbsp; No Cloud Required
+        </div>
+
+        <h1 class="text-5xl sm:text-7xl font-bold tracking-tight text-haven-text mb-6">
+          haven<span class="text-haven-teal">OS</span>
+        </h1>
+
+        <p class="text-xl sm:text-2xl text-haven-muted font-medium mb-4 max-w-2xl mx-auto leading-relaxed">
+          A touch-first smart display for Raspberry Pi
+        </p>
+        <p class="text-haven-muted/70 text-base sm:text-lg max-w-xl mx-auto mb-10">
+          Home Assistant powered. Offline voice ready. Zero cloud required.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href="https://github.com/nprail/havenos"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-haven-teal text-haven-bg font-semibold hover:bg-haven-teal2 transition-colors glow-teal"
+          >
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+            </svg>
+            View on GitHub
+          </a>
+          <a
+            href="#install"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-haven-border text-haven-muted hover:border-haven-teal hover:text-haven-teal transition-all font-medium"
+          >
+            Installation Guide
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </a>
+        </div>
+
+        <!-- Mock display preview -->
+        <div class="mt-16 relative max-w-2xl mx-auto">
+          <div class="rounded-2xl border border-haven-border bg-haven-bg2 p-3 glow-teal">
+            <div class="rounded-xl overflow-hidden bg-haven-bg aspect-video flex items-end p-6 relative">
+              <!-- Simulated ambient screen content -->
+              <div class="absolute inset-0 bg-gradient-to-br from-haven-bg2 via-haven-bg to-haven-bg flex items-center justify-center opacity-40">
+                <div class="w-full h-full bg-gradient-to-br from-haven-teal2/10 to-haven-gold/5"></div>
+              </div>
+              <!-- Clock block -->
+              <div class="relative z-10 bg-black/40 backdrop-blur-sm rounded-2xl px-5 py-3">
+                <div id="demo-clock" class="text-4xl font-bold text-white tracking-tight"></div>
+                <div id="demo-date" class="text-haven-text/70 text-sm mt-0.5"></div>
+              </div>
+              <!-- Weather block -->
+              <div class="relative z-10 ml-auto bg-black/40 backdrop-blur-sm rounded-2xl px-4 py-3 text-right">
+                <div class="text-haven-gold text-2xl font-bold">72°F</div>
+                <div class="text-haven-text/60 text-xs mt-0.5">H:78 · L:61 · Partly Cloudy</div>
+              </div>
+            </div>
+          </div>
+          <p class="text-center text-haven-muted/50 text-xs mt-3">Ambient display — clock, weather, and photo slideshow at rest</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features / Why -->
+    <section id="features" class="py-24 px-6 border-t border-haven-border">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl sm:text-4xl font-bold text-haven-text mb-4">Built on four principles</h2>
+          <p class="text-haven-muted max-w-xl mx-auto">
+            Every design decision in havenOS comes back to these core ideas.
+          </p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Local-first -->
+          <div class="rounded-2xl border border-haven-border bg-haven-surface p-6 hover:border-haven-teal/40 transition-colors group">
+            <div class="w-10 h-10 rounded-xl bg-haven-teal/10 flex items-center justify-center mb-4 group-hover:bg-haven-teal/20 transition-colors">
+              <svg class="w-5 h-5 text-haven-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+              </svg>
+            </div>
+            <h3 class="font-semibold text-haven-text mb-2">Local-First</h3>
+            <p class="text-haven-muted text-sm leading-relaxed">
+              No cloud APIs, ever. Weather, music, and photos all come from your local network. Your privacy stays home.
+            </p>
+          </div>
+
+          <!-- Touch-first -->
+          <div class="rounded-2xl border border-haven-border bg-haven-surface p-6 hover:border-haven-teal/40 transition-colors group">
+            <div class="w-10 h-10 rounded-xl bg-haven-teal/10 flex items-center justify-center mb-4 group-hover:bg-haven-teal/20 transition-colors">
+              <svg class="w-5 h-5 text-haven-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+              </svg>
+            </div>
+            <h3 class="font-semibold text-haven-text mb-2">Touch-First</h3>
+            <p class="text-haven-muted text-sm leading-relaxed">
+              Large hit targets, appliance-style interactions, and generous spacing — designed entirely for finger use.
+            </p>
+          </div>
+
+          <!-- Ambient -->
+          <div class="rounded-2xl border border-haven-border bg-haven-surface p-6 hover:border-haven-gold/40 transition-colors group">
+            <div class="w-10 h-10 rounded-xl bg-haven-gold/10 flex items-center justify-center mb-4 group-hover:bg-haven-gold/20 transition-colors">
+              <svg class="w-5 h-5 text-haven-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+            </div>
+            <h3 class="font-semibold text-haven-text mb-2">Ambient-First</h3>
+            <p class="text-haven-muted text-sm leading-relaxed">
+              Glanceable from across the room. Big type, high contrast. The display is useful at rest — no interaction required.
+            </p>
+          </div>
+
+          <!-- Offline voice -->
+          <div class="rounded-2xl border border-haven-border bg-haven-surface p-6 hover:border-haven-gold/40 transition-colors group">
+            <div class="w-10 h-10 rounded-xl bg-haven-gold/10 flex items-center justify-center mb-4 group-hover:bg-haven-gold/20 transition-colors">
+              <svg class="w-5 h-5 text-haven-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+              </svg>
+            </div>
+            <h3 class="font-semibold text-haven-text mb-2">Offline Voice</h3>
+            <p class="text-haven-muted text-sm leading-relaxed">
+              Wake word detection and speech-to-text run entirely on-device. No audio ever leaves your home.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modules -->
+    <section id="modules" class="py-24 px-6 border-t border-haven-border bg-haven-bg2/40">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl sm:text-4xl font-bold text-haven-text mb-4">Everything you need, built in</h2>
+          <p class="text-haven-muted max-w-xl mx-auto">
+            Tap any module to open a full-screen detail view with controls.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <!-- Weather -->
+          <div class="rounded-2xl border border-haven-border bg-haven-surface p-5 hover:border-haven-teal/40 transition-all hover:-translate-y-0.5 group cursor-default">
+            <div class="text-2xl mb-3">🌤</div>
+            <h3 class="font-semibold text-haven-text mb-1">Weather</h3>
+            <p class="text-haven-muted text-xs leading-relaxed">Conditions, forecast, and high/low from a local HA weather entity.</p>
+          </div>
+
+          <!-- Music -->
+          <div class="rounded-2xl border border-haven-border bg-haven-surface p-5 hover:border-haven-teal/40 transition-all hover:-translate-y-0.5 group cursor-default">
+            <div class="text-2xl mb-3">🎵</div>
+            <h3 class="font-semibold text-haven-text mb-1">Music</h3>
+            <p class="text-haven-muted text-xs leading-relaxed">Now-playing and playback controls via Music Assistant.</p>
+          </div>
+
+          <!-- Timers -->
+          <div class="rounded-2xl border border-haven-border bg-haven-surface p-5 hover:border-haven-teal/40 transition-all hover:-translate-y-0.5 group cursor-default">
+            <div class="text-2xl mb-3">⏱</div>
+            <h3 class="font-semibold text-haven-text mb-1">Timers</h3>
+            <p class="text-haven-muted text-xs leading-relaxed">Active HA timers with live countdown and quick-set presets.</p>
+          </div>
+
+          <!-- Lights -->
+          <div class="rounded-2xl border border-haven-border bg-haven-surface p-5 hover:border-haven-gold/40 transition-all hover:-translate-y-0.5 group cursor-default">
+            <div class="text-2xl mb-3">💡</div>
+            <h3 class="font-semibold text-haven-text mb-1">Lights</h3>
+            <p class="text-haven-muted text-xs leading-relaxed">Per-area brightness sliders and scene controls.</p>
+          </div>
+
+          <!-- Climate -->
+          <div class="rounded-2xl border border-haven-border bg-haven-surface p-5 hover:border-haven-gold/40 transition-all hover:-translate-y-0.5 group cursor-default">
+            <div class="text-2xl mb-3">🌡️</div>
+            <h3 class="font-semibold text-haven-text mb-1">Climate</h3>
+            <p class="text-haven-muted text-xs leading-relaxed">Thermostat control per Home Assistant climate entity.</p>
+          </div>
+
+          <!-- Cameras -->
+          <div class="rounded-2xl border border-haven-border bg-haven-surface p-5 hover:border-haven-teal/40 transition-all hover:-translate-y-0.5 group cursor-default">
+            <div class="text-2xl mb-3">📷</div>
+            <h3 class="font-semibold text-haven-text mb-1">Cameras</h3>
+            <p class="text-haven-muted text-xs leading-relaxed">Live camera feeds from Home Assistant camera entities.</p>
+          </div>
+
+          <!-- Scenes -->
+          <div class="rounded-2xl border border-haven-border bg-haven-surface p-5 hover:border-haven-gold/40 transition-all hover:-translate-y-0.5 group cursor-default">
+            <div class="text-2xl mb-3">🎬</div>
+            <h3 class="font-semibold text-haven-text mb-1">Scenes</h3>
+            <p class="text-haven-muted text-xs leading-relaxed">One-tap HA scene activations for your favourite moods.</p>
+          </div>
+
+          <!-- HA Dashboard -->
+          <div class="rounded-2xl border border-haven-border bg-haven-surface p-5 hover:border-haven-teal/40 transition-all hover:-translate-y-0.5 group cursor-default">
+            <div class="text-2xl mb-3">🏠</div>
+            <h3 class="font-semibold text-haven-text mb-1">HA Dashboard</h3>
+            <p class="text-haven-muted text-xs leading-relaxed">Embedded Lovelace view for full entity access when you need it.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Install -->
+    <section id="install" class="py-24 px-6 border-t border-haven-border bg-haven-bg2/40">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2 class="text-3xl sm:text-4xl font-bold text-haven-text mb-4">One command to get started</h2>
+        <p class="text-haven-muted mb-10 max-w-lg mx-auto">
+          Clone the repo to your Raspberry Pi, run the install script, and you're running.
+        </p>
+
+        <div class="space-y-4 text-left">
+          <div class="code-block rounded-xl p-4 flex items-center gap-3 group">
+            <span class="text-haven-muted/50 select-none">$</span>
+            <code class="text-haven-teal font-mono text-sm flex-1">git clone https://github.com/nprail/havenos.git</code>
+            <button
+              onclick="navigator.clipboard.writeText('git clone https://github.com/nprail/havenos.git')"
+              class="opacity-0 group-hover:opacity-100 transition-opacity text-haven-muted hover:text-haven-teal"
+              title="Copy"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="code-block rounded-xl p-4 flex items-center gap-3 group">
+            <span class="text-haven-muted/50 select-none">$</span>
+            <code class="text-haven-teal font-mono text-sm flex-1">cd havenos && sudo ./install.sh</code>
+            <button
+              onclick="navigator.clipboard.writeText('cd havenos && sudo ./install.sh')"
+              class="opacity-0 group-hover:opacity-100 transition-opacity text-haven-muted hover:text-haven-teal"
+              title="Copy"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <p class="text-haven-muted/60 text-xs mt-6">
+          Requires a Raspberry Pi 4 running Raspberry Pi OS Lite (64-bit) and a local Home Assistant instance.
+        </p>
+      </div>
+    </section>
+
+    <!-- CTA footer banner -->
+    <section class="py-20 px-6 border-t border-haven-border">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-3xl sm:text-4xl font-bold text-haven-text mb-4">
+          Your home, your display, your data.
+        </h2>
+        <p class="text-haven-muted mb-8 max-w-lg mx-auto">
+          havenOS is open source. Contributions, issues, and ideas are welcome.
+        </p>
+        <a
+          href="https://github.com/nprail/havenos"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-haven-teal text-haven-bg font-semibold hover:bg-haven-teal2 transition-colors glow-teal"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          Star on GitHub
+        </a>
+      </div>
+    </section>
+
+    <script>
+      (function () {
+        var clockEl = document.getElementById('demo-clock');
+        var dateEl = document.getElementById('demo-date');
+        var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        function update() {
+          var now = new Date();
+          var h = now.getHours();
+          var m = now.getMinutes();
+          var ampm = h >= 12 ? 'PM' : 'AM';
+          h = h % 12 || 12;
+          clockEl.textContent = h + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+          dateEl.textContent = days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate();
+        }
+        update();
+        setInterval(update, 1000);
+      })();
+    </script>
+
+    <!-- Footer -->
+    <footer class="border-t border-haven-border py-8 px-6">
+      <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <img src="assets/havenos-logo.svg" alt="havenOS" class="w-6 h-6" />
+          <span class="text-haven-muted text-sm font-medium">havenOS</span>
+        </div>
+        <p class="text-haven-muted/50 text-xs">
+          Open source. MIT License.
+        </p>
+        <a
+          href="https://github.com/nprail/havenos"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-haven-muted/50 hover:text-haven-teal text-xs transition-colors"
+        >
+          github.com/nprail/havenos
+        </a>
+      </div>
+    </footer>
+  </body>
+</html>

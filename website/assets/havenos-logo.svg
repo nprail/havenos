@@ -1,0 +1,42 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">havenOS logo</title>
+  <desc id="desc">A stylized home display with a local signal halo and the word havenOS</desc>
+  <defs>
+    <linearGradient id="bg" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0C1B2A"/>
+      <stop offset="1" stop-color="#143B4A"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="150" y1="154" x2="362" y2="316" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4DD6C0"/>
+      <stop offset="1" stop-color="#2A9D8F"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="170" y1="201" x2="341" y2="201" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6BD60"/>
+      <stop offset="1" stop-color="#EE964B"/>
+    </linearGradient>
+    <filter id="glow" x="84" y="74" width="344" height="290" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="64" y="64" width="384" height="384" rx="96" fill="url(#bg)"/>
+
+  <g filter="url(#glow)">
+    <path d="M124 202C124 129.099 183.099 70 256 70C328.901 70 388 129.099 388 202" stroke="#4DD6C0" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+  </g>
+
+  <rect x="134" y="154" width="244" height="170" rx="28" fill="url(#screen)"/>
+  <rect x="150" y="170" width="212" height="108" rx="20" fill="#0F2332"/>
+
+  <path d="M170 201H341" stroke="url(#accent)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M190 228H271" stroke="#84F1E1" stroke-width="10" stroke-linecap="round" opacity="0.9"/>
+  <circle cx="313" cy="228" r="14" fill="#F6BD60"/>
+
+  <rect x="211" y="338" width="90" height="14" rx="7" fill="#4DD6C0" opacity="0.85"/>
+
+  <text x="256" y="404" text-anchor="middle" fill="#ECF4F3" font-family="'Space Grotesk', 'Segoe UI', sans-serif" font-size="44" font-weight="700" letter-spacing="0.3">havenOS</text>
+</svg>
