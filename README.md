@@ -12,9 +12,9 @@
 <p align="center">
   <a href="SPEC.md"><strong>Read Full Spec</strong></a>
   ·
-  <a href="#installation-plan"><strong>Installation Plan</strong></a>
+  <a href="#installation"><strong>Installation</strong></a>
   ·
-  <a href="#roadmap-v01"><strong>Roadmap</strong></a>
+  <a href="#development"><strong>Development</strong></a>
 </p>
 
 ---
@@ -22,15 +22,6 @@
 ## What Is havenOS?
 
 havenOS is a Nest Hub-style ambient display experience, built to run entirely on your local network. It runs in Chromium kiosk mode on a Raspberry Pi touchscreen, uses Home Assistant as a data/control bus, and renders a fully custom interface designed for glanceability and touch.
-
-## Project Status
-
-| Item | Value |
-|------|-------|
-| Version | 0.1 (draft) |
-| State | Pre-development |
-| Source of truth | [SPEC.md](SPEC.md) |
-| Current repo contents | Specification-first docs |
 
 ## Why This Exists
 
@@ -40,16 +31,16 @@ havenOS is a Nest Hub-style ambient display experience, built to run entirely on
 - Custom UI, not Lovelace for primary flows
 - Reliable, deterministic install target for Raspberry Pi OS Lite
 
-## Installation Plan
+## Tech Stack
 
-Implementation is intentionally spec-first right now and should follow [SPEC.md](SPEC.md).
-
-Installer goals:
-
-- One-command setup for Raspberry Pi OS Lite
-- Deterministic package and runtime bootstrap
-- Safe re-runs (idempotent behavior)
-- Local configuration bootstrap with clear post-install instructions
+| Layer     | Technology                                           |
+| --------- | ---------------------------------------------------- |
+| UI        | React 18, TypeScript, Tailwind CSS v4, Framer Motion |
+| State     | Zustand, TanStack Query                              |
+| Bundler   | Vite                                                 |
+| Server    | Node.js, Express, `ws`                               |
+| HA bridge | `home-assistant-js-websocket`                        |
+| Photos    | Immich SDK                                           |
 
 ## System At A Glance
 
@@ -67,37 +58,78 @@ flowchart LR
 
 Runtime processes:
 
-1. havenOS-server (Node.js)
-2. havenOS-ui (Chromium kiosk)
-3. linux-voice-assistant
-4. shairport-sync
-5. sendspin
+1. `havenos-server` — Express + WebSocket bridge (Node.js)
+2. `havenos-ui` — Chromium kiosk serving the React app
+3. `linux-voice-assistant` — offline wake word + STT pipeline
+4. `shairport-sync` — AirPlay receiver
+5. `sendspin` — local cast/audio relay
 
-## Planned Experience
+## App States
 
-Primary app states:
+| State          | Description                                              |
+| -------------- | -------------------------------------------------------- |
+| `ambient`      | Full-bleed photo slideshow with clock and weather        |
+| `active`       | Dashboard with module cards and quick controls           |
+| `listening`    | Voice overlay with animated waveform and transcript      |
+| `detail`       | Full-screen module overlay (Weather, Music, Lights, etc.)|
+| `ha-dashboard` | Embedded Home Assistant Lovelace iframe                  |
+| `settings`     | havenOS configuration screen                            |
 
-1. ambient
-2. active
-3. listening
-4. detail
-5. ha_dashboard
+## Modules
 
-Key feature set:
-
-- Ambient photo slideshow with large clock and weather
-- Active dashboard with module cards and quick controls
-- Offline voice listening, processing, and response states
-- Full-screen detail overlays for core modules
-- Embedded Home Assistant dashboard escape hatch
-- Local broadcast announcements (visual + optional TTS)
-- Cast/audio source support via shairport-sync and sendspin-cli
+- **Weather** — current conditions, forecast, high/low from a HA `weather.*` entity
+- **Music** — now-playing, playback controls via Music Assistant
+- **Timers** — active HA timers with countdown and quick-set
+- **Lights** — per-area brightness and scene controls
+- **Climate** — thermostat control per HA climate entity
+- **Cameras** — live camera feeds from HA
+- **Scenes** — one-tap HA scene activations
 
 ## Hardware Target
 
 - Raspberry Pi 4 (4GB+)
-- 7"-10" HDMI touchscreen
-- Target layout: 1280x800 (graceful fallback to 1024x600)
+- 7"–10" HDMI touchscreen
+- Target layout: 1280×800 (graceful fallback to 1024×600)
+- ReSpeaker 2-Mic HAT or USB mic array
+- Raspberry Pi OS Lite (64-bit)
+
+## Installation
+
+```bash
+sudo ./install.sh
+```
+
+Options:
+
+| Flag              | Description                                    |
+| ----------------- | ---------------------------------------------- |
+| `--yes`           | Non-interactive, accept all defaults           |
+| `--user NAME`     | Service user name (default: `havenos`)         |
+| `--skip-packages` | Skip apt package installation                  |
+| `--skip-node`     | Skip Node.js installation via NodeSource       |
+| `--skip-kiosk`    | Skip Chromium kiosk service installation       |
+
+The installer is idempotent — safe to re-run. After install, edit `/opt/havenos/config.json` with your Home Assistant URL, long-lived token, and Immich details.
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start dev server (UI + server with hot reload)
+npm run dev
+```
+
+The Vite dev server runs on port `5173` and proxies `/api` and `/events` WebSocket traffic to the Node server on port `3001`.
+
+```bash
+# Production build
+npm run build
+
+# Preview production build
+npm run preview
+```
 - ReSpeaker 2/4-mic input hardware
 - USB DAC or 3.5mm audio output path
 - Raspberry Pi OS Lite 64-bit

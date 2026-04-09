@@ -25,14 +25,14 @@ The server process is minimal — it serves the static app, bridges filesystem a
 
 ## 2. Hardware Target
 
-| Component | Spec |
-|-----------|------|
-| SBC | Raspberry Pi 4 (4GB+) |
-| Display | 7"–10" HDMI touchscreen (e.g., Waveshare 10.1" 1280×800 capacitive) |
-| Microphone | ReSpeaker 2-Mic HAT or ReSpeaker 4-Mic Array (USB) |
-| Speaker | USB DAC + powered bookshelf speaker, or 3.5mm to amp |
-| Storage | 32GB+ microSD or USB SSD |
-| OS | Raspberry Pi OS Lite (64-bit) |
+| Component  | Spec                                                                |
+| ---------- | ------------------------------------------------------------------- |
+| SBC        | Raspberry Pi 4 (4GB+)                                               |
+| Display    | 7"–10" HDMI touchscreen (e.g., Waveshare 10.1" 1280×800 capacitive) |
+| Microphone | ReSpeaker 2-Mic HAT or ReSpeaker 4-Mic Array (USB)                  |
+| Speaker    | USB DAC + powered bookshelf speaker, or 3.5mm to amp                |
+| Storage    | 32GB+ microSD or USB SSD                                            |
+| OS         | Raspberry Pi OS Lite (64-bit)                                       |
 
 The app is designed for 1280×800 landscape. It should degrade gracefully to 1024×600.
 
@@ -95,6 +95,7 @@ The device's resting state. No interaction required to be useful.
 ```
 
 **Elements:**
+
 - **Photo background:** Full-bleed photo cycling on a configurable interval (default 60s). Source is a local directory path configured in settings. Images are preloaded and crossfade (500ms ease). Portrait photos get a blurred copy as the background with the original centered and letterboxed.
 - **Clock:** Bottom-left, large. Primary font: time in ~120px. Date in ~28px below. Both use a semi-transparent dark scrim behind the text block (no solid card — the scrim hugs the text bounds with 16px padding and rounded corners). Text is always white; the scrim opacity adjusts based on photo brightness (computed via canvas pixel sampling).
 - **Weather widget:** Bottom-right. Current temp, condition icon (SVG, not emoji), today's high/low. Same scrim treatment. Data comes from a HA `weather.*` entity.
@@ -150,6 +151,7 @@ The main interactive surface. Slides up from the bottom of AMBIENT.
 Triggered by wake word ("Ok Nabu" or custom) or microphone button tap.
 
 **Visual treatment:**
+
 - The current state (AMBIENT or ACTIVE) dims to 60% opacity.
 - A bottom sheet rises from the bottom edge (~180px tall).
 - The bottom sheet contains:
@@ -162,6 +164,7 @@ Triggered by wake word ("Ok Nabu" or custom) or microphone button tap.
 **Waveform:** SVG bars updated at 60fps from microphone amplitude data. 40 bars, centered, symmetric around a baseline. Color matches the theme accent.
 
 **States within LISTENING:**
+
 - `listening` — waveform animates to mic input
 - `processing` — waveform becomes a slow pulsing animation (processing indicator)
 - `responding` — waveform animates to TTS audio output; text of response shown
@@ -200,12 +203,14 @@ A full-screen embedded view of the Home Assistant Lovelace frontend. Slides up o
 ```
 
 **Touch considerations for the iframe:**
+
 - The iframe receives all touch events natively. Lovelace is already touch-capable.
-- The back chevron and the top chrome bar are rendered by havenOS *over* the iframe using `position: fixed` within the havenOS overlay layer (not inside the iframe). This ensures the dismiss control is always accessible regardless of what Lovelace renders.
+- The back chevron and the top chrome bar are rendered by havenOS _over_ the iframe using `position: fixed` within the havenOS overlay layer (not inside the iframe). This ensures the dismiss control is always accessible regardless of what Lovelace renders.
 - A 48px tall top chrome bar is reserved and the iframe is inset by that amount (`top: 48px`, `height: calc(100% - 48px)`). This prevents Lovelace's own header from being obscured.
 - Swipe-down to dismiss: a gesture recognizer on the havenOS overlay layer (not the iframe) detects a downward swipe starting in the top 80px of the screen and dismisses. Swipes further down in the iframe are passed through to Lovelace.
 
 **Lovelace view selection:** Configurable. Options:
+
 - Default view (HA home dashboard)
 - A specific named view path (e.g., `/lovelace/touch`) — allows the user to create a touch-optimized Lovelace view in HA and point havenOS at it
 - A specific HA panel (e.g., `/config/dashboard`)
@@ -221,12 +226,14 @@ A full-screen embedded view of the Home Assistant Lovelace frontend. Slides up o
 **Data source:** HA `weather.*` entity (Met.no, Open-Meteo, or any HA weather integration). Attributes: `temperature`, `humidity`, `wind_speed`, `wind_bearing`, `forecast` (hourly and daily arrays).
 
 **Card (ACTIVE view):**
+
 - Current temperature (large, ~56px)
 - Condition label + SVG icon
 - High / Low for today
 - A 4-hour strip: hourly forecast, icon + temp per column
 
 **Detail view (MODULE DETAIL):**
+
 - Full-width today summary: temperature, feels-like, humidity, wind speed/direction, UV index, sunrise/sunset
 - 7-day daily forecast: day name, icon, high, low, precipitation probability (rendered as a subtle bar)
 - Hourly forecast for the next 24 hours: horizontal scrollable strip, icon + temp + precip probability
@@ -234,6 +241,7 @@ A full-screen embedded view of the Home Assistant Lovelace frontend. Slides up o
 **Weather icons:** Custom SVG icon set (not emoji, not external font). Icons are drawn inline for: clear-day, clear-night, partly-cloudy-day, partly-cloudy-night, cloudy, rainy, snowy, sleety, windy, foggy, thunderstorm. Icons animate (sun rotates slowly, rain drops animate, lightning flashes).
 
 **Voice commands (examples):**
+
 - "What's the weather like?" → reads current conditions + today's forecast
 - "Will it rain tomorrow?" → reads tomorrow's precipitation probability
 - "What's the forecast this week?" → reads daily high/low for 7 days
@@ -260,6 +268,7 @@ Browser (now-playing display, playback controls)         Speaker
 The browser connects directly to the Sendspin server for the `metadata`, `artwork`, and `controller` roles — it receives real-time now-playing updates and sends play/pause/seek/volume/next/prev commands back. For browsing, it calls the MA REST API directly to search the library, browse artists/albums/playlists, and queue tracks to the havenOS Sendspin player. havenOS-server is not in the music hot path at all.
 
 **Library browsing (MA REST API at `http://MA_SERVER:8095`):**
+
 - Search: `GET /search?query=...&media_type=track|album|artist|playlist`
 - Browse library: `GET /library/tracks`, `/library/albums`, `/library/artists`, `/library/playlists`
 - Browse artist: `GET /artists/{id}/albums`
@@ -277,11 +286,13 @@ The browser maintains a WebSocket connection to the Sendspin server and subscrib
 havenOS-server subscribes to Sendspin metadata events (via a lightweight Sendspin client connection on `localhost`) and syncs the HA `media_player.havenos_display` entity — state, title, artist, artwork URL. HA can also send commands to this entity (from voice or automations), which havenOS-server translates to MA REST API calls.
 
 **Card (ACTIVE view):**
+
 - Album art (80×80px), track name, artist name
 - Play/pause button (48px touch target), previous / next track buttons
 - State read from Zustand `cast` slice (Sendspin metadata role)
 
 **Detail view (MODULE DETAIL):**
+
 - Full-width album art
 - Track name (large), artist, album
 - Seekable progress bar (tap/drag → Sendspin controller `seek`)
@@ -291,6 +302,7 @@ havenOS-server subscribes to Sendspin metadata events (via a lightweight Sendspi
 - **Browse button** — opens the library browser (see below)
 
 **Library browser (within MODULE DETAIL):**
+
 - Home screen: Recents, Favorites, Playlists, Artists, Albums, Tracks
 - All data fetched from MA REST API with optimistic loading and a local LRU cache
 - Tap an album → track list → tap track → queues and plays via MA REST API
@@ -298,6 +310,7 @@ havenOS-server subscribes to Sendspin metadata events (via a lightweight Sendspi
 - Artwork loaded directly from MA (MA serves album art at `/library/albums/{id}/thumb`)
 
 **Voice commands (HA Assist → `media_player.havenos_display` → havenOS-server → MA REST API):**
+
 - "Play jazz on the display" → MA REST search → queue to havenOS player
 - "Pause the music", "Next song", "Set volume to 40 percent", "Shuffle my music"
 
@@ -305,16 +318,16 @@ havenOS-server subscribes to Sendspin metadata events (via a lightweight Sendspi
 
 ---
 
-
-
 Timers are managed as HA `timer.*` entities. havenOS can create, start, pause, cancel, and display timers. The app also supports multiple simultaneous timers with named labels.
 
 **Card (ACTIVE view):**
+
 - If no active timers: "No active timers" + a large + button
 - If timers active: list of up to 3 timers (each showing label, remaining time in MM:SS or HH:MM:SS, a circular progress ring, and a × cancel button)
 - A "+ New Timer" button always visible at bottom of card
 
 **Detail view (MODULE DETAIL):**
+
 - All active timers in a scrollable list (each with ring + label + remaining time + pause/resume + cancel)
 - A timer creation interface:
   - Duration input: large numpad grid (0–9 + : + delete) — the user taps digits like a physical timer (e.g., "1", "0", "0" → 1:00:00... "1", "0" → 10:00)
@@ -322,11 +335,13 @@ Timers are managed as HA `timer.*` entities. havenOS can create, start, pause, c
   - Preset buttons: 5 min, 10 min, 15 min, 20 min, 30 min, 1 hour
 
 **Timer completion:**
+
 - A chime sound (configurable, local audio file) plays on the Pi's speaker.
 - A full-screen notification overlays any current state: timer label, "Timer done!", a dismiss button, and a "+1 min" snooze button.
 - The notification auto-dismisses after 30s.
 
 **Voice commands:**
+
 - "Set a timer for 10 minutes"
 - "Set a pasta timer for 12 minutes"
 - "How much time is left on my timer?"
@@ -345,6 +360,7 @@ Timers are managed as HA `timer.*` entities. havenOS can create, start, pause, c
 **Quick control (ACTIVE quick row):** Tap "Lights" → full MODULE DETAIL.
 
 **Detail view:**
+
 - Room tabs at top (configurable, matches HA areas)
 - Per-room: a list of lights/groups with:
   - Toggle switch (large, 56px touch target)
@@ -354,6 +370,7 @@ Timers are managed as HA `timer.*` entities. havenOS can create, start, pause, c
 - A room-level "all on / all off" toggle at the top of each room section
 
 **Voice commands:**
+
 - "Turn on the kitchen lights"
 - "Dim the living room to 30 percent"
 - "Turn off all the lights"
@@ -368,6 +385,7 @@ Timers are managed as HA `timer.*` entities. havenOS can create, start, pause, c
 **Quick control (ACTIVE quick row):** Shows current temperature setpoint + mode icon. Tap → MODULE DETAIL.
 
 **Detail view:**
+
 - Large current temperature readout (from linked `sensor.*` entity)
 - Target temperature dial (large, circular, draggable — similar to a Nest UI treatment but rendered in havenOS's design language)
 - Mode buttons: Heat / Cool / Auto / Off (row of 4 pills)
@@ -375,6 +393,7 @@ Timers are managed as HA `timer.*` entities. havenOS can create, start, pause, c
 - Current humidity (from linked sensor)
 
 **Voice commands:**
+
 - "Set the thermostat to 70 degrees"
 - "Turn on the heat"
 - "What's the temperature inside?"
@@ -386,6 +405,7 @@ Timers are managed as HA `timer.*` entities. havenOS can create, start, pause, c
 **Data source:** HA `camera.*` entities.
 
 **Detail view:**
+
 - Grid of camera thumbnails (refreshed every 10s via HA camera proxy endpoint)
 - Tap any thumbnail → full-screen live view (MJPEG stream from HA)
 
@@ -400,6 +420,7 @@ No voice commands for cameras (privacy).
 **Detail view:** Grid of scene buttons (icon + label). Each button is 160×100px with a configurable icon and label. Tap → calls `scene.turn_on` or `script.turn_on`.
 
 **Voice commands:**
+
 - "Activate movie mode"
 - "Run the good morning scene"
 
@@ -413,17 +434,20 @@ Broadcast allows any local process or HA automation to push a spoken announcemen
 
 **1. Via HA (recommended for automations):**
 havenOS registers a `notify.havenos_display` notify service with HA via the `media_player.havenos_display` entity's announcement capability. Any HA automation or script can call:
+
 ```yaml
 action: notify.havenos_display
 data:
-  message: "Front door opened"
-  title: "Security"        # optional
+  message: 'Front door opened'
+  title: 'Security' # optional
   data:
-    icon: "door"           # optional — one of havenOS's icon set names
+    icon: 'door' # optional — one of havenOS's icon set names
 ```
+
 havenOS-server receives this via its HA WebSocket connection (the same connection used for music sync) and dispatches it internally.
 
 **2. Via direct HTTP (for local scripts and other processes):**
+
 ```
 POST http://localhost:3000/api/broadcast
 Content-Type: application/json
@@ -435,6 +459,7 @@ Content-Type: application/json
   "tts": true                // optional — default true
 }
 ```
+
 This path works entirely without HA. Any process on the Pi or local network can trigger a broadcast.
 
 **What happens on broadcast:**
@@ -446,6 +471,7 @@ This path works entirely without HA. Any process on the Pi or local network can 
 5. If the display is off (quiet hours), it wakes briefly to show the overlay, then returns to off after dismissal
 
 **Broadcast overlay UI:**
+
 - Slides up from the bottom (same motion as the LISTENING sheet)
 - Height: ~140px
 - Left: large icon (48×48px) from havenOS's SVG icon set, or a default megaphone icon
@@ -473,11 +499,13 @@ havenOS's speaker can receive audio cast from phones, computers, and other devic
 **Service:** `shairport-sync.service` — a fourth systemd service. Outputs directly to ALSA/PipeWire, independent of havenOS-server.
 
 **AirPlay 2 requirements:**
+
 - Build from source with `--with-airplay-2` flag
 - Companion daemon `nqptp` must have exclusive access to ports 319 and 320 for timing synchronisation
 - FFmpeg with AAC decoder required for AirPlay 2 format support
 
 **Metadata integration:** shairport-sync can write track metadata (title, artist, album, artwork) to a named pipe when compiled with `--with-metadata`. havenOS-server watches this pipe and uses it to:
+
 - Update the Zustand `cast` slice with now-playing info
 - Show the now-playing strip in AMBIENT state
 - Sync `media_player.havenos_display` state to HA
@@ -498,11 +526,11 @@ havenOS's speaker can receive audio cast from phones, computers, and other devic
 
 **havenOS's role in Sendspin is richer than just audio.** The Sendspin protocol defines multiple client roles beyond `player`. havenOS can register with the Sendspin server as all of the following simultaneously:
 
-| Role | What havenOS does |
-|------|------------------|
-| `player@v1` | Receives and plays synchronized audio via `sendspin-cli` daemon |
-| `metadata@v1` | Displays track title, artist, album on the havenOS screen |
-| `artwork@v1` | Displays album art on the havenOS screen |
+| Role            | What havenOS does                                                                                                                  |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `player@v1`     | Receives and plays synchronized audio via `sendspin-cli` daemon                                                                    |
+| `metadata@v1`   | Displays track title, artist, album on the havenOS screen                                                                          |
+| `artwork@v1`    | Displays album art on the havenOS screen                                                                                           |
 | `controller@v1` | The havenOS music module touch controls (play/pause, seek, volume, next/prev) send Sendspin controller messages back to the server |
 
 The `metadata`, `artwork`, and `controller` roles are implemented directly in the browser via a WebSocket connection to the Sendspin server — havenOS-server proxies the connection through `/api/sendspin-proxy` to avoid CORS issues. This means the havenOS display becomes a full Sendspin participant: it plays the audio, shows the album art, shows the metadata, and provides touch controls — all synchronized with every other Sendspin player in the home.
@@ -522,8 +550,6 @@ The `metadata`, `artwork`, and `controller` roles are implemented directly in th
 havenOS-server manages this through a simple active-source state machine. Paused sources are resumed in reverse priority order when the higher-priority source ends.
 
 ---
-
-
 
 linux-voice-assistant uses the ESPHome protocol (via `aioesphomeapi`) to register directly with Home Assistant as a voice satellite device — the same protocol used by the HA Voice Preview Edition hardware. This gives it access to newer HA voice features unavailable to the old Wyoming-based satellite, including native timer support, stop wake word, start/continue conversation, and media player integration.
 
@@ -599,12 +625,14 @@ This is a deliberate constraint. Immich provides album organization, date metada
 havenOS connects to Immich via its REST API using a configured base URL and API key. The Immich instance must be on the local network; no external Immich access is supported or needed.
 
 **Supported fetch modes (configurable):**
+
 - **Album** — photos from a specific named album (selected by album ID in settings)
 - **Favorites** — photos marked as favorites in Immich
 - **All photos** — entire library, shuffled
 - **Date range** — random selection from a specified date range (e.g., "photos from this month in any year" — useful for a "on this day" feel)
 
 **Fetch behavior:**
+
 - On startup, havenOS fetches a batch of 50 asset IDs from Immich matching the configured mode.
 - Photos are fetched individually as needed (`/api/assets/{id}/thumbnail?size=preview`) and cached in memory (LRU, max 20 photos).
 - A background refresh runs every 30 minutes to pull new photos into the queue.
@@ -633,6 +661,7 @@ All configuration is stored in a local JSON file (`~/.havenOS/config.json`). The
 ### 7.1 Settings Screens
 
 **General**
+
 - Display name (shown in ACTIVE state header)
 - Display brightness (0–100%, controls Pi backlight via `rpi-backlight` or HDMI-CEC)
 - Quiet hours: start time, end time, dim-to % (or off)
@@ -641,12 +670,14 @@ All configuration is stored in a local JSON file (`~/.havenOS/config.json`). The
 - Accent color: a set of 8 preset colors
 
 **Home Assistant Connection**
+
 - HA base URL (e.g., `http://homeassistant.local:8123`)
 - Long-lived access token (input field, stored locally, never transmitted anywhere but the local HA instance)
 - Connection status indicator + reconnect button
 - Entity selection for: weather entity, media player entity, climate entity(ies), light areas, scene list, camera list
 
 **Photos**
+
 - Immich base URL (e.g., `http://immich.local:2283`)
 - Immich API key
 - Fetch mode: Album / Favorites / All photos / Date range
@@ -656,6 +687,7 @@ All configuration is stored in a local JSON file (`~/.havenOS/config.json`). The
 - Shuffle toggle
 
 **Voice**
+
 - Enable/disable wake word
 - Wake word model selection (OpenWakeWord or MicroWakeWord; dropdown of available models)
 - Wake word sensitivity slider
@@ -665,10 +697,12 @@ All configuration is stored in a local JSON file (`~/.havenOS/config.json`). The
 - TTS voice selection (dropdown of installed Piper voices, configured in HA)
 
 **Timers**
+
 - Timer chime selection (dropdown of local audio files in configured dir, with preview button)
 - Chime volume
 
 **Advanced**
+
 - Log level (Info / Debug)
 - Export config / Import config
 - Restart application
@@ -683,6 +717,7 @@ All configuration is stored in a local JSON file (`~/.havenOS/config.json`). The
 havenOS connects to HA via the WebSocket API (`ws://`). It authenticates using a long-lived access token. It does **not** use the HA frontend, Lovelace, or any HA component — purely the API.
 
 **On connect:**
+
 1. Authenticate with token
 2. Subscribe to state changes for all configured entities
 3. Fetch current state of all configured entities (initial render)
@@ -701,38 +736,39 @@ havenOS connects to HA via the WebSocket API (`ws://`). It authenticates using a
 6. Push current state for all registered entities immediately after registration
 
 **On disconnect:**
+
 - Show a small "Reconnecting…" indicator (not a blocking overlay)
 - Retry with exponential backoff (1s, 2s, 4s, 8s… max 60s)
 - Continue showing last known state with a subtle "stale" indicator
 
 ### 8.2 Entity Subscriptions
 
-| Module | Entities |
-|--------|----------|
-| Clock | `sun.sun` (for auto theme) |
-| Weather | `weather.*` (configured entity) |
-| Music | `media_player.havenos_display` (havenOS's own registered entity) |
-| Timers | All `timer.*` entities |
-| Lights | All `light.*` entities in configured areas |
-| Climate | All `climate.*` entities (configured) |
-| Cameras | All `camera.*` entities (configured) |
-| Scenes | All `scene.*` and selected `script.*` entities |
+| Module  | Entities                                                         |
+| ------- | ---------------------------------------------------------------- |
+| Clock   | `sun.sun` (for auto theme)                                       |
+| Weather | `weather.*` (configured entity)                                  |
+| Music   | `media_player.havenos_display` (havenOS's own registered entity) |
+| Timers  | All `timer.*` entities                                           |
+| Lights  | All `light.*` entities in configured areas                       |
+| Climate | All `climate.*` entities (configured)                            |
+| Cameras | All `camera.*` entities (configured)                             |
+| Scenes  | All `scene.*` and selected `script.*` entities                   |
 
 ### 8.3 Service Calls
 
 havenOS calls HA services over the WebSocket connection for all modules except Music:
 
-| Action | HA Service |
-|--------|------------|
-| Toggle light | `light.turn_on` / `light.turn_off` |
-| Set brightness | `light.turn_on` with `brightness_pct` |
+| Action                | HA Service                               |
+| --------------------- | ---------------------------------------- |
+| Toggle light          | `light.turn_on` / `light.turn_off`       |
+| Set brightness        | `light.turn_on` with `brightness_pct`    |
 | Set color temperature | `light.turn_on` with `color_temp_kelvin` |
-| Set climate temp | `climate.set_temperature` |
-| Set climate mode | `climate.set_hvac_mode` |
-| Create timer | `timer.start` |
-| Cancel timer | `timer.cancel` |
-| Activate scene | `scene.turn_on` |
-| Run script | `script.turn_on` |
+| Set climate temp      | `climate.set_temperature`                |
+| Set climate mode      | `climate.set_hvac_mode`                  |
+| Create timer          | `timer.start`                            |
+| Cancel timer          | `timer.cancel`                           |
+| Activate scene        | `scene.turn_on`                          |
+| Run script            | `script.turn_on`                         |
 
 **Music commands do not go through HA.** The browser calls the MA REST API and Sendspin controller role directly. havenOS-server syncs state to HA as a side effect. Music controls work even if HA is down.
 
@@ -742,42 +778,42 @@ havenOS-server registers the following with HA on connection via the WebSocket A
 
 **Media**
 
-| Entity | Type | What it does |
-|--------|------|-------------|
+| Entity                         | Type           | What it does                                                                                                                                           |
+| ------------------------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `media_player.havenos_display` | `media_player` | Reflects Sendspin playback state (synced by havenOS-server). Accepts all standard `media_player` services — commands are forwarded to the MA REST API. |
-| `notify.havenos_display` | notify service | Triggers a broadcast. Accepts `message`, `title`, and `data.icon`. Equivalent to `POST /api/broadcast`. |
+| `notify.havenos_display`       | notify service | Triggers a broadcast. Accepts `message`, `title`, and `data.icon`. Equivalent to `POST /api/broadcast`.                                                |
 
 **Display**
 
-| Entity | Type | What it does |
-|--------|------|-------------|
-| `number.havenos_brightness` | `number` (0–100) | Current display brightness. HA can read or set it. Setting it calls `POST /api/brightness` internally. Enables automations like "dim to 20% at sunset" or "full brightness at 7am". |
-| `switch.havenos_screen` | `switch` | Screen on/off. Turning off blanks the display and disables the photo slideshow (equivalent to quiet hours with dim=0). Turning on restores normal operation. Distinct from brightness — this is a hard on/off. Useful for "turn off all screens" automations. |
+| Entity                      | Type             | What it does                                                                                                                                                                                                                                                  |
+| --------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `number.havenos_brightness` | `number` (0–100) | Current display brightness. HA can read or set it. Setting it calls `POST /api/brightness` internally. Enables automations like "dim to 20% at sunset" or "full brightness at 7am".                                                                           |
+| `switch.havenos_screen`     | `switch`         | Screen on/off. Turning off blanks the display and disables the photo slideshow (equivalent to quiet hours with dim=0). Turning on restores normal operation. Distinct from brightness — this is a hard on/off. Useful for "turn off all screens" automations. |
 
 **Screen state**
 
-| Entity | Type | What it does |
-|--------|------|-------------|
+| Entity                        | Type     | What it does                                                                                                                                                                                                                                                                                              |
+| ----------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sensor.havenos_screen_state` | `sensor` | Current screen state: `ambient`, `active`, `listening`, `detail`, `ha_dashboard`. Updated on every state transition. Lets HA conditionals and automations react to what the user is doing — e.g. pause a podcast when `listening`, trigger a welcome scene when transitioning from `ambient` to `active`. |
 
 **Voice**
 
-| Entity | Type | What it does |
-|--------|------|-------------|
-| `sensor.havenos_voice_state` | `sensor` | Current voice pipeline state: `idle`, `listening`, `processing`, `responding`. Sourced from the linux-voice-assistant ESPHome phase subscription. Lets HA pause music while the assistant is listening and resume when it returns to idle. |
-| `switch.havenos_wake_word` | `switch` | Wake word detection on/off. Turning off mutes the microphone listener. HA can tie this to a "do not disturb" mode, bedtime routine, or mute all smart speakers automation. State is bidirectional — toggling from the havenOS Settings UI also updates this entity. |
+| Entity                       | Type     | What it does                                                                                                                                                                                                                                                        |
+| ---------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sensor.havenos_voice_state` | `sensor` | Current voice pipeline state: `idle`, `listening`, `processing`, `responding`. Sourced from the linux-voice-assistant ESPHome phase subscription. Lets HA pause music while the assistant is listening and resume when it returns to idle.                          |
+| `switch.havenos_wake_word`   | `switch` | Wake word detection on/off. Turning off mutes the microphone listener. HA can tie this to a "do not disturb" mode, bedtime routine, or mute all smart speakers automation. State is bidirectional — toggling from the havenOS Settings UI also updates this entity. |
 
 **Photos**
 
-| Entity | Type | What it does |
-|--------|------|-------------|
-| `button.havenos_next_photo` | `button` | Advances to the next photo immediately, bypassing the cycle timer. Useful for dashboards with a "next photo" button or automations that advance photos on a schedule. |
+| Entity                         | Type     | What it does                                                                                                                                                                                                                                            |
+| ------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `button.havenos_next_photo`    | `button` | Advances to the next photo immediately, bypassing the cycle timer. Useful for dashboards with a "next photo" button or automations that advance photos on a schedule.                                                                                   |
 | `sensor.havenos_current_photo` | `sensor` | The Immich asset ID of the currently displayed photo, with attributes for `album_name`, `date_taken`, and `location` (when available). Useful for logging, conditionals, and displaying photo metadata in an HA dashboard alongside the havenOS iframe. |
 
 **Audio sources**
 
-| Entity | Type | What it does |
-|--------|------|-------------|
+| Entity                         | Type     | What it does                                                                                                                                                                                |
+| ------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sensor.havenos_active_source` | `sensor` | Current active audio source: `airplay`, `sendspin`, `broadcast`, `voice`, or `idle`. Lets HA automations react to what's playing — e.g. dim lights when Sendspin starts, restore when idle. |
 
 **Implementation notes:**
@@ -874,40 +910,40 @@ Each service has `Restart=always RestartSec=2`. **Boot sequence:** havenOS-serve
 
 ### 9.3 What Lives Where
 
-| Concern | Where it lives |
-|---------|---------------|
-| UI rendering | Browser |
-| App state management | Browser (Zustand) |
-| HA entity subscriptions (weather, lights, climate, etc.) | Browser → HA WebSocket |
-| HA service calls (lights, climate, timers, scenes) | Browser → HA WebSocket |
-| Music library browse | Browser → MA REST API (`http://MA_SERVER:8095`) |
-| Music play / queue | Browser → MA REST API `POST /player_queues/{id}/play_media` |
-| Music playback control (UI) | Browser → Sendspin server (controller role, direct WebSocket) |
-| Music now-playing state | Sendspin server → browser (metadata + artwork roles, direct WebSocket) |
-| HA entity sync for music | havenOS-server Sendspin metadata client → `media_player.havenos_display` |
-| Inbound HA music commands | HA → havenOS-server HA WebSocket → MA REST API |
-| Photo cycling | Browser → direct HTTP to Immich |
-| Config read/write | Browser → `GET/POST /api/config` → havenOS-server |
-| Wake word / voice phase relay | linux-voice-assistant (`localhost:6053`) → havenOS-server ESPHome client (loopback) → `/events` → browser |
-| Broadcast (inbound) | Local: `POST /api/broadcast` → havenOS-server · HA: `notify.havenos_display` → havenOS-server HA WebSocket |
-| Broadcast TTS + audio | havenOS-server → ESPHome `announce` → linux-voice-assistant → speaker |
-| Broadcast visual overlay | havenOS-server → `/events` → browser overlay |
-| Display brightness (HA-controlled) | HA → havenOS-server HA WebSocket → shell-exec + `/events` → browser |
-| Display brightness (UI-controlled) | Browser → `POST /api/brightness` → havenOS-server → shell-exec + HA entity sync |
-| Screen on/off (HA-controlled) | HA → havenOS-server HA WebSocket → `/events` → browser |
-| Screen state reporting | Browser screen transitions → havenOS-server → HA entity update |
-| Voice state reporting | linux-voice-assistant ESPHome phases → havenOS-server → HA entity update + `/events` → browser |
-| Wake word enable/disable (HA) | HA → havenOS-server HA WebSocket → ESPHome command → linux-voice-assistant |
-| Wake word enable/disable (UI) | Browser → `POST /api/wake-word` → havenOS-server → ESPHome command + HA entity sync |
-| Next photo (HA) | HA → havenOS-server HA WebSocket → `/events` → browser |
-| Current photo reporting | Browser photo advance → havenOS-server → HA entity update |
-| AirPlay audio playback | shairport-sync daemon → ALSA/PipeWire |
-| AirPlay now-playing + HA sync | shairport-sync metadata pipe → havenOS-server → `media_player.havenos_display` |
-| Sendspin audio playback | sendspin-cli daemon → ALSA/PipeWire |
-| Sendspin now-playing / artwork / controls | Browser → direct WebSocket to Sendspin server (metadata, artwork, controller roles) |
-| Active source arbitration | havenOS-server — tracks AirPlay vs Sendspin; updates `sensor.havenos_active_source` |
-| Audio playback | shairport-sync (AirPlay) · sendspin-cli (Sendspin) |
-| Audio routing (mic, wake word, TTS) | linux-voice-assistant + ALSA (entirely outside havenOS) |
+| Concern                                                  | Where it lives                                                                                             |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| UI rendering                                             | Browser                                                                                                    |
+| App state management                                     | Browser (Zustand)                                                                                          |
+| HA entity subscriptions (weather, lights, climate, etc.) | Browser → HA WebSocket                                                                                     |
+| HA service calls (lights, climate, timers, scenes)       | Browser → HA WebSocket                                                                                     |
+| Music library browse                                     | Browser → MA REST API (`http://MA_SERVER:8095`)                                                            |
+| Music play / queue                                       | Browser → MA REST API `POST /player_queues/{id}/play_media`                                                |
+| Music playback control (UI)                              | Browser → Sendspin server (controller role, direct WebSocket)                                              |
+| Music now-playing state                                  | Sendspin server → browser (metadata + artwork roles, direct WebSocket)                                     |
+| HA entity sync for music                                 | havenOS-server Sendspin metadata client → `media_player.havenos_display`                                   |
+| Inbound HA music commands                                | HA → havenOS-server HA WebSocket → MA REST API                                                             |
+| Photo cycling                                            | Browser → direct HTTP to Immich                                                                            |
+| Config read/write                                        | Browser → `GET/POST /api/config` → havenOS-server                                                          |
+| Wake word / voice phase relay                            | linux-voice-assistant (`localhost:6053`) → havenOS-server ESPHome client (loopback) → `/events` → browser  |
+| Broadcast (inbound)                                      | Local: `POST /api/broadcast` → havenOS-server · HA: `notify.havenos_display` → havenOS-server HA WebSocket |
+| Broadcast TTS + audio                                    | havenOS-server → ESPHome `announce` → linux-voice-assistant → speaker                                      |
+| Broadcast visual overlay                                 | havenOS-server → `/events` → browser overlay                                                               |
+| Display brightness (HA-controlled)                       | HA → havenOS-server HA WebSocket → shell-exec + `/events` → browser                                        |
+| Display brightness (UI-controlled)                       | Browser → `POST /api/brightness` → havenOS-server → shell-exec + HA entity sync                            |
+| Screen on/off (HA-controlled)                            | HA → havenOS-server HA WebSocket → `/events` → browser                                                     |
+| Screen state reporting                                   | Browser screen transitions → havenOS-server → HA entity update                                             |
+| Voice state reporting                                    | linux-voice-assistant ESPHome phases → havenOS-server → HA entity update + `/events` → browser             |
+| Wake word enable/disable (HA)                            | HA → havenOS-server HA WebSocket → ESPHome command → linux-voice-assistant                                 |
+| Wake word enable/disable (UI)                            | Browser → `POST /api/wake-word` → havenOS-server → ESPHome command + HA entity sync                        |
+| Next photo (HA)                                          | HA → havenOS-server HA WebSocket → `/events` → browser                                                     |
+| Current photo reporting                                  | Browser photo advance → havenOS-server → HA entity update                                                  |
+| AirPlay audio playback                                   | shairport-sync daemon → ALSA/PipeWire                                                                      |
+| AirPlay now-playing + HA sync                            | shairport-sync metadata pipe → havenOS-server → `media_player.havenos_display`                             |
+| Sendspin audio playback                                  | sendspin-cli daemon → ALSA/PipeWire                                                                        |
+| Sendspin now-playing / artwork / controls                | Browser → direct WebSocket to Sendspin server (metadata, artwork, controller roles)                        |
+| Active source arbitration                                | havenOS-server — tracks AirPlay vs Sendspin; updates `sensor.havenos_active_source`                        |
+| Audio playback                                           | shairport-sync (AirPlay) · sendspin-cli (Sendspin)                                                         |
+| Audio routing (mic, wake word, TTS)                      | linux-voice-assistant + ALSA (entirely outside havenOS)                                                    |
 
 HA is a sync target for music and display state, not a control path. Music controls, voice, and display brightness all work whether or not HA is connected.
 
@@ -920,11 +956,13 @@ The UI is built with **React 18** and **Tailwind CSS v4**, compiled to a static 
 **Tailwind CSS v4:** Used for all styling. No custom CSS files — all styles are Tailwind utility classes. Tailwind's `@theme` block in the root CSS file defines the design token system (colors, spacing, radii, fonts) so theme switching (dark/light, accent color) is handled by swapping CSS custom properties on the root element, which Tailwind's `var()` references pick up automatically.
 
 **Build toolchain:**
+
 - Vite for bundling and dev server (fast HMR during development on a separate machine)
 - TypeScript strict mode throughout
 - `vite build` output goes to `dist/` — the server serves this directly
 
 **Key libraries:**
+
 - `zustand` — state management (see §9.5)
 - `framer-motion` — screen transition animations and gesture handling (swipe-to-dismiss, press feedback)
 - `@tanstack/react-query` — data fetching from the local server API (photos, config)
@@ -946,15 +984,15 @@ Touch is the primary and assumed input method. Every decision in the component l
 
 **Gesture vocabulary:** Consistent across the entire app. No module invents its own gesture.
 
-| Gesture | Action |
-|---------|--------|
-| Tap | Primary action on element |
-| Long press (500ms) | Secondary action / context (e.g., photo info in AMBIENT) |
-| Swipe down (from top 80px) | Dismiss MODULE DETAIL or HA DASHBOARD |
-| Swipe left / right | Navigate photo slideshow (AMBIENT), scroll carousels (ACTIVE modules) |
-| Swipe up (from bottom) | No action (reserved to avoid conflict with OS gestures) |
-| Two-finger swipe down | No action |
-| Pinch | No action (no zoom anywhere) |
+| Gesture                    | Action                                                                |
+| -------------------------- | --------------------------------------------------------------------- |
+| Tap                        | Primary action on element                                             |
+| Long press (500ms)         | Secondary action / context (e.g., photo info in AMBIENT)              |
+| Swipe down (from top 80px) | Dismiss MODULE DETAIL or HA DASHBOARD                                 |
+| Swipe left / right         | Navigate photo slideshow (AMBIENT), scroll carousels (ACTIVE modules) |
+| Swipe up (from bottom)     | No action (reserved to avoid conflict with OS gestures)               |
+| Two-finger swipe down      | No action                                                             |
+| Pinch                      | No action (no zoom anywhere)                                          |
 
 Zoom is disabled globally via the viewport meta tag (`user-scalable=no`). Accidental pinch-zoom on a kiosk display breaks the layout and provides no benefit.
 
@@ -970,85 +1008,85 @@ State is managed with **Zustand**. A single store holds all application state. C
 
 ```typescript
 interface BroadcastMessage {
-  id: string;           // uuid, for keying React list
-  message: string;
-  title?: string;
-  icon?: string;        // name from havenOS SVG icon set, e.g. 'door', 'bell', 'alert'
-  tts: boolean;         // whether audio was/should be played
-  receivedAt: number;   // Date.now()
+  id: string // uuid, for keying React list
+  message: string
+  title?: string
+  icon?: string // name from havenOS SVG icon set, e.g. 'door', 'bell', 'alert'
+  tts: boolean // whether audio was/should be played
+  receivedAt: number // Date.now()
 }
 
 interface HavenStore {
   // Screen routing — every transition is reported to HA as sensor.havenos_screen_state
-  screen: 'ambient' | 'active' | 'listening' | 'detail' | 'ha-dashboard';
-  activeModule: Module | null;
-  navigate: (screen: Screen, module?: Module) => void;
+  screen: 'ambient' | 'active' | 'listening' | 'detail' | 'ha-dashboard'
+  activeModule: Module | null
+  navigate: (screen: Screen, module?: Module) => void
 
   // HA connection — weather, lights, climate, timers, scenes, cameras
   ha: {
-    connected: boolean;
-    stale: boolean;
-    entities: Record<string, HAEntity>;
-  };
-  callService: (domain: string, service: string, data: object) => void;
+    connected: boolean
+    stale: boolean
+    entities: Record<string, HAEntity>
+  }
+  callService: (domain: string, service: string, data: object) => void
 
   // Active audio source — determined by havenOS-server source arbitration
   // Reported to HA as sensor.havenos_active_source
-  activeSource: 'airplay' | 'sendspin' | 'broadcast' | 'voice' | null;
+  activeSource: 'airplay' | 'sendspin' | 'broadcast' | 'voice' | null
 
   // Now-playing — single source of truth for all audio playback display
   // AirPlay: populated from shairport-sync metadata pipe via havenOS-server /events
   // Sendspin: populated directly from Sendspin server metadata/artwork roles (browser WebSocket)
   nowPlaying: {
-    source: 'airplay' | 'sendspin' | null;
-    state: 'playing' | 'paused' | 'stopped';
-    title: string;
-    artist: string;
-    album: string;
-    artUrl: string;
-    duration: number;
-    position: number;
-    volume: number;
-    shuffle: boolean;
-    repeat: 'off' | 'track' | 'playlist';
-  };
+    source: 'airplay' | 'sendspin' | null
+    state: 'playing' | 'paused' | 'stopped'
+    title: string
+    artist: string
+    album: string
+    artUrl: string
+    duration: number
+    position: number
+    volume: number
+    shuffle: boolean
+    repeat: 'off' | 'track' | 'playlist'
+  }
 
   // Voice pipeline — state sourced from ESPHome phase events via /events
   voice: {
-    state: 'idle' | 'listening' | 'processing' | 'responding';
-    transcript: string;
-    response: string;
-    wakeWordEnabled: boolean;  // mirrors switch.havenos_wake_word in HA
-    setWakeWord: (enabled: boolean) => void;  // POSTs to /api/wake-word
-  };
+    state: 'idle' | 'listening' | 'processing' | 'responding'
+    transcript: string
+    response: string
+    wakeWordEnabled: boolean // mirrors switch.havenos_wake_word in HA
+    setWakeWord: (enabled: boolean) => void // POSTs to /api/wake-word
+  }
 
   // Display controls — mirrored to HA entities, settable from UI or HA
   display: {
-    brightness: number;        // 0–100; mirrors number.havenos_brightness
-    screenOn: boolean;         // mirrors switch.havenos_screen
-    setBrightness: (value: number) => void;  // POSTs to /api/brightness
-    setScreenOn: (on: boolean) => void;      // POSTs to /api/screen
-  };
+    brightness: number // 0–100; mirrors number.havenos_brightness
+    screenOn: boolean // mirrors switch.havenos_screen
+    setBrightness: (value: number) => void // POSTs to /api/brightness
+    setScreenOn: (on: boolean) => void // POSTs to /api/screen
+  }
 
   // Broadcast queue — populated by /events pushes from havenOS-server
   // Supports both HA notify.havenos_display and direct POST /api/broadcast
   broadcasts: {
-    queue: BroadcastMessage[];
-    current: BroadcastMessage | null;
-    dismiss: () => void;  // removes current, advances queue
-  };
+    queue: BroadcastMessage[]
+    current: BroadcastMessage | null
+    dismiss: () => void // removes current, advances queue
+  }
 
   // Photos — current photo info reported to HA as sensor.havenos_current_photo
   photos: {
-    current: PhotoAsset | null;  // { id, albumName, dateTaken, location }
-    queue: PhotoAsset[];
-    advance: () => void;    // also triggers HA sensor update
-    previous: () => void;
-  };
+    current: PhotoAsset | null // { id, albumName, dateTaken, location }
+    queue: PhotoAsset[]
+    advance: () => void // also triggers HA sensor update
+    previous: () => void
+  }
 
   // Settings (persisted to server config API)
-  settings: AppSettings;
-  updateSettings: (patch: Partial<AppSettings>) => void;
+  settings: AppSettings
+  updateSettings: (patch: Partial<AppSettings>) => void
 }
 ```
 
@@ -1056,15 +1094,15 @@ No Redux, no Context-based prop drilling, no global event bus. Zustand's selecto
 
 ### 9.7 Performance Targets
 
-| Metric | Target |
-|--------|--------|
-| Cold start to AMBIENT | < 8 seconds (server + Chromium boot) |
-| Touch to ACTIVE transition | < 100ms |
-| Wake word to LISTENING visual | < 300ms (HA state change → havenOS-server → /events → render) |
-| HA entity update to UI render | < 50ms |
-| Photo crossfade | 500ms, no dropped frames |
-| Memory footprint (Chromium + server) | < 300MB RSS total |
-| CPU idle (AMBIENT) | < 5% |
+| Metric                               | Target                                                        |
+| ------------------------------------ | ------------------------------------------------------------- |
+| Cold start to AMBIENT                | < 8 seconds (server + Chromium boot)                          |
+| Touch to ACTIVE transition           | < 100ms                                                       |
+| Wake word to LISTENING visual        | < 300ms (HA state change → havenOS-server → /events → render) |
+| HA entity update to UI render        | < 50ms                                                        |
+| Photo crossfade                      | 500ms, no dropped frames                                      |
+| Memory footprint (Chromium + server) | < 300MB RSS total                                             |
+| CPU idle (AMBIENT)                   | < 5%                                                          |
 
 ---
 
@@ -1076,23 +1114,24 @@ All design tokens are defined in the Tailwind `@theme` block in `src/index.css`.
 
 Both typefaces are loaded from `dist/fonts/` as WOFF2. No network requests.
 
-| Role | Tailwind class | Font | Size | Weight |
-|------|---------------|------|------|--------|
-| Clock time | `font-display text-[120px] font-thin` | Display (e.g., Urbanist) | 120px | 200 |
-| Clock date | `font-display text-[28px] font-light` | Display | 28px | 300 |
-| Temperature (detail) | `font-display text-[72px] font-thin` | Display | 72px | 200 |
-| Module header | `font-sans text-[22px] font-medium` | UI Sans | 22px | 500 |
-| Card primary value | `font-sans text-[28px] font-normal` | UI Sans | 28px | 400 |
-| Card secondary | `font-sans text-base font-normal` | UI Sans | 16px | 400 |
-| Labels / captions | `font-sans text-[13px] font-normal` | UI Sans | 13px | 400 |
-| Voice transcript | `font-sans text-lg font-normal` | UI Sans | 18px | 400 |
-| Touch targets (min) | `min-h-12 min-w-12` | — | 48px | — |
+| Role                 | Tailwind class                        | Font                     | Size  | Weight |
+| -------------------- | ------------------------------------- | ------------------------ | ----- | ------ |
+| Clock time           | `font-display text-[120px] font-thin` | Display (e.g., Urbanist) | 120px | 200    |
+| Clock date           | `font-display text-[28px] font-light` | Display                  | 28px  | 300    |
+| Temperature (detail) | `font-display text-[72px] font-thin`  | Display                  | 72px  | 200    |
+| Module header        | `font-sans text-[22px] font-medium`   | UI Sans                  | 22px  | 500    |
+| Card primary value   | `font-sans text-[28px] font-normal`   | UI Sans                  | 28px  | 400    |
+| Card secondary       | `font-sans text-base font-normal`     | UI Sans                  | 16px  | 400    |
+| Labels / captions    | `font-sans text-[13px] font-normal`   | UI Sans                  | 13px  | 400    |
+| Voice transcript     | `font-sans text-lg font-normal`       | UI Sans                  | 18px  | 400    |
+| Touch targets (min)  | `min-h-12 min-w-12`                   | —                        | 48px  | —      |
 
 ### 10.2 Color Themes
 
 Two base themes defined as Tailwind `@theme` token sets. Switching themes swaps the CSS custom property values on `<html>` — all Tailwind classes that reference these tokens update automatically.
 
 **Dark theme (default at night):**
+
 - Background: `#0a0a0b` → `--color-bg`
 - Surface: `rgba(255,255,255,0.07)` → `--color-surface` (frosted glass cards)
 - Surface border: `rgba(255,255,255,0.12)` → `--color-border`
@@ -1101,6 +1140,7 @@ Two base themes defined as Tailwind `@theme` token sets. Switching themes swaps 
 - Accent: configurable → `--color-accent` (default: `#4a9eff`)
 
 **Light theme (default during day):**
+
 - Background: photo (always visible)
 - Surface: `rgba(255,255,255,0.75)` + `backdrop-blur-xl` → `--color-surface`
 - Surface border: `rgba(0,0,0,0.08)` → `--color-border`
@@ -1114,16 +1154,16 @@ Two base themes defined as Tailwind `@theme` token sets. Switching themes swaps 
 
 All transitions are implemented with **Framer Motion**. No raw CSS `transition` or `@keyframes` for screen-level animations — Framer Motion's `AnimatePresence` handles mount/unmount sequencing cleanly with React.
 
-| Event | Framer Motion implementation |
-|-------|------------------------------|
-| AMBIENT → ACTIVE | `y: '100%' → 0`, 300ms, `easeOut` cubic |
-| ACTIVE → AMBIENT | `y: 0 → '100%'`, 250ms, `easeIn` cubic |
-| LISTENING sheet | `y: '100%' → 0`, 200ms, spring (stiffness 400, damping 35) |
-| Photo crossfade | `opacity: 0 → 1` on incoming, 500ms `easeInOut` |
-| MODULE DETAIL / HA DASHBOARD | `y: '100%' → 0`, 300ms, `easeOut` cubic |
-| Card / button press | `whileTap={{ scale: 0.95 }}`, spring |
-| Timer completion overlay | `scale: 0.9 → 1, opacity: 0 → 1`, 200ms `easeOut` |
-| Voice waveform bars | `scaleY` keyed to mic amplitude, 60fps via `useAnimationFrame` |
+| Event                        | Framer Motion implementation                                   |
+| ---------------------------- | -------------------------------------------------------------- |
+| AMBIENT → ACTIVE             | `y: '100%' → 0`, 300ms, `easeOut` cubic                        |
+| ACTIVE → AMBIENT             | `y: 0 → '100%'`, 250ms, `easeIn` cubic                         |
+| LISTENING sheet              | `y: '100%' → 0`, 200ms, spring (stiffness 400, damping 35)     |
+| Photo crossfade              | `opacity: 0 → 1` on incoming, 500ms `easeInOut`                |
+| MODULE DETAIL / HA DASHBOARD | `y: '100%' → 0`, 300ms, `easeOut` cubic                        |
+| Card / button press          | `whileTap={{ scale: 0.95 }}`, spring                           |
+| Timer completion overlay     | `scale: 0.9 → 1, opacity: 0 → 1`, 200ms `easeOut`              |
+| Voice waveform bars          | `scaleY` keyed to mic amplitude, 60fps via `useAnimationFrame` |
 
 All Framer Motion variants respect `prefers-reduced-motion` — set `transition={{ duration: 0 }}` when the media query is matched.
 
