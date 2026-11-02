@@ -1,0 +1,66 @@
+name: Docs
+
+# Builds the docs site (docmd, from docs/) and publishes it to GitHub Pages at
+# https://<owner>.github.io/<repo>/. One-time setup: repository Settings > Pages > Source: "GitHub Actions".
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "docmd.config.json"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; let a running one finish rather than cancel it half way.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The committed config points at localhost for `npm run docs:dev`; the published site needs its real address
+      # (links are relative, so the /<repo>/ sub-path works, but sitemap and canonical URLs use this).
+      - name: Point the site at its Pages address
+        run: |
+          jq --arg url "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}" '.url = $url' \
+            docmd.config.json > docmd.config.pages.json
+          mv docmd.config.pages.json docmd.config.json
+
+      - name: Check for broken links
+        run: npx docmd validate
+
+      - run: npm run docs:build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

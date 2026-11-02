@@ -1,0 +1,17 @@
+# go-librespot as a Spotify Connect device that writes PCM to a pipe for havenOS ([music.spotify] manage = false).
+# Spotify Connect needs a Premium account and may be refused on some accounts (spec 07, Spotify risk); AirPlay is the fallback.
+[Unit]
+Description=go-librespot (Spotify Connect) for havenOS
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=havenos
+SupplementaryGroups=audio
+ExecStartPre=/usr/bin/install -d -m 755 /var/lib/havenos/spotify
+ExecStartPre=/bin/sh -c '[ -p /var/lib/havenos/spotify/audio.pipe ] || mkfifo -m 660 /var/lib/havenos/spotify/audio.pipe'
+ExecStart=/usr/local/bin/go-librespot --config_dir /etc/havenos/go-librespot
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

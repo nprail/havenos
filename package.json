@@ -1,0 +1,13 @@
+{
+  "name": "havenos",
+  "version": "1.0.0",
+  "description": "An open-source ambient smart display for a Raspberry Pi 4: a photo slideshow with glass overlays, a Home Assistant dashboard, and (planned) a voice assistant that behaves like a Home Assistant Voice Preview Edition.",
+  "scripts": {
+    "docs:dev": "DOCMD_HOST=0.0.0.0 docmd dev",
+    "docs:build": "docmd build"
+  },
+  "devDependencies": {
+    "@docmd/core": "^0.9.8"
+  },
+  "private": true
+}

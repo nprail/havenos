@@ -1,0 +1,91 @@
+# You normally do not need to edit this file: the settings web UI (http://<device-ip>:8787) writes it for you.
+# Copy to ~/.config/havenos/config.toml (or point HAVENOS_CONFIG at it). Everything is optional:
+# with no [homeassistant] section the dashboard shows demo data; with no Immich the local photo folder is used.
+# Env overrides: HAVENOS_HA_URL, HAVENOS_HA_TOKEN, HAVENOS_IMMICH_URL, HAVENOS_IMMICH_KEY, HAVENOS_IMMICH_ALBUM, HAVENOS_PHOTO_SOURCE
+
+[homeassistant]
+url = "http://homeassistant.local:8123"
+# Long-lived access token (HA profile page). Prefer a file readable only by the service user.
+token_file = "~/.config/havenos/ha_token"
+weather = "weather.home"               # shown on ambient + dashboard; forecasts via weather.get_forecasts
+media_player = "media_player.kitchen"  # now-playing strip + dashboard music card
+
+# Up to 6 quick-control tiles. Tap behaviour is chosen by domain:
+# light/switch/fan/input_boolean/cover -> toggle, lock -> lock/unlock, scene/script -> run; others are display-only.
+[[homeassistant.controls]]
+entity = "light.kitchen"
+label = "Kitchen"          # optional (defaults to the entity's friendly name)
+icon = "bulb"              # optional: bulb | thermo | camera | scenes | gear
+[[homeassistant.controls]]
+entity = "climate.hall"
+[[homeassistant.controls]]
+entity = "lock.front_door"
+[[homeassistant.controls]]
+entity = "scene.movie_night"
+
+[photos]
+source = "nasa"            # "nasa" (NASA Image of the Day, the default), "immich" or "local"
+dir = "~/Pictures/frame"   # used when source = "local" (HAVENOS_PHOTOS also works)
+
+[photos.immich]
+url = "http://immich.local:2283"
+api_key_file = "~/.config/havenos/immich_key"   # or api_key = "..."
+album = ""                 # album id; empty = random photos from the whole library
+shuffle = true             # false = server order, no recency weighting
+# Newer photos are shown more often; the weight halves every half-life but never drops below the floor,
+# so old photos still appear. recency_half_life_days = 0 turns the preference off.
+recency_half_life_days = 365
+recency_floor = 0.1
+list_size = 120            # photos per pass; every pass is a fresh weighted sample
+
+[display]
+photo_interval_s = 8
+idle_s = 30
+crossfade_ms = 1500        # photo crossfade
+blur = true
+
+[web]
+enabled = true
+host = "0.0.0.0"           # 127.0.0.1 = only from the device itself
+port = 8787
+
+# Home Assistant adoption and voice (docs/home-assistant.md, docs/specs/05-voice-pipeline.md). Both are opt-in.
+[esphome]
+enabled = false
+# key_file = "~/.config/havenos/esphome_key"   # Noise encryption key: python -m havenos.core.esphome.noise . Required for voice
+
+[voice]                    # behave like a Home Assistant Voice Preview Edition (needs [esphome] with a key; pip install 'havenos[voice]')
+enabled = false
+profile = "default"        # xvf3800 (reSpeaker XVF3800 USB) | lite (reSpeaker Lite USB) | default (the system sound device)
+# wake_words = ["okay_nabu"]          # up to two of okay_nabu, hey_jarvis, hey_mycroft
+# sensitivity = "Moderately sensitive"
+# stop_model = ""          # path to the VPE's "stop" model .json, if you have it
+# stt_entity = ""          # speech-to-text for spoken library search, e.g. "stt.faster_whisper" (default: the first stt.* in Home Assistant)
+
+# Music (docs/specs/07-music-pipeline.md). Whatever starts playing last takes over; one source is active at a time.
+[music]
+idle_s = 600               # a paused source frees the speaker after this long
+hint = false               # show "ready to cast" with the available sources while nothing plays
+duck_db = -20              # music level while an announcement, timer or the assistant is speaking
+
+[music.assistant]          # Music Assistant: lets the display search, browse and play your library (the Library button)
+url = ""                   # e.g. http://homeassistant.local:8095
+# token_file = "~/.config/havenos/ma_token"   # long-lived token: Music Assistant > Settings > Profile (or set it on the settings page)
+player_id = ""             # "" = find this display's player by its Sendspin name
+
+[music.sendspin]           # receive from Music Assistant (or any Sendspin server); opens a LAN port and advertises over mDNS
+enabled = false
+name = ""                  # "" = havenOS <hostname>
+port = 8928
+
+[music.spotify]            # appear as a Spotify Connect device (needs go-librespot: brew install go-librespot; Premium account)
+enabled = false
+name = ""                  # "" = havenOS <hostname>
+api_port = 3678            # go-librespot's local API
+manage = true              # run go-librespot ourselves; false = connect to one already running
+
+[music.airplay]            # appear as an AirPlay receiver (needs shairport-sync built with --with-pipe --with-metadata-pipe)
+enabled = false
+name = ""                  # "" = havenOS <hostname>
+port = 7000                # on a Mac, 7000 is taken by the system's AirPlay Receiver: use e.g. 7100
+manage = true              # run shairport-sync ourselves; false = use one already running

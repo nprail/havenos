@@ -1,0 +1,13 @@
+{
+  "name": "havenos-webui",
+  "private": true,
+  "description": "Build tooling for the settings page's Tailwind CSS. The compiled CSS is committed, so running havenOS needs no Node.",
+  "scripts": {
+    "build": "tailwindcss -i input.css -o ../src/havenos/web/app.css --minify",
+    "watch": "tailwindcss -i input.css -o ../src/havenos/web/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}

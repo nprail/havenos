@@ -1,0 +1,32 @@
+[project]
+name = "havenos"
+version = "0.0.1"
+description = "havenOS smart display: Python core + Qt Quick UI in one process"
+requires-python = ">=3.12"
+license = {file = "LICENSE"}
+readme = "README.md"
+authors = [{name = "Noah Prail"}]
+dependencies = ["PySide6>=6.7", "Pillow>=10", "aiohttp>=3.9", "qasync>=0.27", "tomli-w>=1.0", "aioesphomeapi>=40", "zeroconf>=0.130", "aiosendspin>=10.2.2,<11", "sounddevice>=0.4.6", "numpy>=1.26", "segno>=1.6"]
+
+[project.urls]
+Homepage = "https://github.com/nprail/havenos"
+Issues = "https://github.com/nprail/havenos/issues"
+
+[project.optional-dependencies]
+voice = ["pymicro-wakeword>=2.0"]       # the real wake word detector (microWakeWord, the VPE's models)
+dev = ["pytest", "pytest-asyncio", "aiosendspin[server]>=10.2.2,<11"]   # [server] only for tests/core/test_sendspin_server.py
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+havenos = ["qml/*", "assets/**/*", "web/*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]

@@ -1,0 +1,12 @@
+# Points havenOS at scripts/dev_servers.py (fake HA + fake Immich). Dev only.
+[homeassistant]
+url = "http://127.0.0.1:18123"
+token = "dev-token"
+room = "Living Room"        # the fake HA has no real device registry entry for this display
+persistent_notifications = true
+
+[photos]
+source = "immich"
+[photos.immich]
+url = "http://127.0.0.1:12283"
+api_key = "dev-key"

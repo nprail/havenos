@@ -1,0 +1,16 @@
+# Mirrors what havenOS writes when it manages go-librespot itself (core/media/sources/spotify.py `_write_config`).
+device_name: "havenOS"
+device_type: speaker
+zeroconf_enabled: true
+credentials:
+  type: zeroconf
+  zeroconf:
+    persist_credentials: true
+external_volume: true
+server:
+  enabled: true
+  address: 127.0.0.1
+  port: 3678
+audio_backend: pipe
+audio_output_pipe: "/var/lib/havenos/spotify/audio.pipe"
+audio_output_pipe_format: s16le

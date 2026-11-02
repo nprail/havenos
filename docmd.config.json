@@ -1,0 +1,159 @@
+{
+  "title": "havenOS",
+  "url": "http://localhost:3000",
+  "src": "docs",
+  "out": "site",
+  "engine": "js",
+  "layout": {
+    "spa": true,
+    "header": {
+      "enabled": true
+    },
+    "sidebar": {
+      "collapsible": true,
+      "defaultCollapsed": false
+    },
+    "optionsMenu": {
+      "position": "sidebar-top",
+      "components": {
+        "search": true,
+        "themeSwitch": true
+      }
+    },
+    "footer": {
+      "style": "minimal",
+      "content": "havenOS docs",
+      "branding": false
+    }
+  },
+  "theme": {
+    "name": "default",
+    "appearance": "system",
+    "codeHighlight": true
+  },
+  "minify": true,
+  "autoTitleFromH1": true,
+  "copyCode": true,
+  "pageNavigation": true,
+  "navigation": [
+    {
+      "title": "Overview",
+      "path": "/",
+      "icon": "home"
+    },
+    {
+      "title": "Getting started",
+      "path": "/getting-started/",
+      "icon": "rocket"
+    },
+    {
+      "title": "Guides",
+      "icon": "book-open",
+      "collapsible": true,
+      "children": [
+        {
+          "title": "Configuration reference",
+          "path": "/configuration/"
+        },
+        {
+          "title": "Settings web UI",
+          "path": "/settings-ui/"
+        },
+        {
+          "title": "Home Assistant",
+          "path": "/home-assistant/"
+        },
+        {
+          "title": "Raspberry Pi",
+          "path": "/raspberry-pi/"
+        },
+        {
+          "title": "Troubleshooting",
+          "path": "/troubleshooting/"
+        }
+      ]
+    },
+    {
+      "title": "Music",
+      "icon": "music",
+      "collapsible": true,
+      "children": [
+        {
+          "title": "Overview",
+          "path": "/music/"
+        },
+        {
+          "title": "AirPlay",
+          "path": "/music/airplay/"
+        },
+        {
+          "title": "Sendspin",
+          "path": "/music/sendspin/"
+        },
+        {
+          "title": "Spotify Connect",
+          "path": "/music/spotify/"
+        },
+        {
+          "title": "Music Assistant library",
+          "path": "/music/music-assistant/"
+        }
+      ]
+    },
+    {
+      "title": "Project",
+      "icon": "layers",
+      "collapsible": true,
+      "children": [
+        {
+          "title": "Architecture",
+          "path": "/architecture/"
+        },
+        {
+          "title": "Contributing",
+          "path": "/contributing/"
+        },
+        {
+          "title": "Decisions",
+          "path": "/decisions/"
+        },
+        {
+          "title": "Implementation notes",
+          "path": "/implementation-notes/"
+        }
+      ]
+    },
+    {
+      "title": "Specs",
+      "icon": "file-text",
+      "collapsible": true,
+      "children": [
+        {
+          "title": "00 Common requirements",
+          "path": "/specs/00-common/"
+        },
+        {
+          "title": "03 Qt + Python app",
+          "path": "/specs/03-qt-python-single/"
+        },
+        {
+          "title": "04 ESPHome integration",
+          "path": "/specs/04-esphome-integration/"
+        },
+        {
+          "title": "05 Voice pipeline",
+          "path": "/specs/05-voice-pipeline/"
+        },
+        {
+          "title": "06 Rooms, exposure, notifications",
+          "path": "/specs/06-rooms-exposure-notifications/"
+        },
+        {
+          "title": "07 Music pipeline",
+          "path": "/specs/07-music-pipeline/"
+        }
+      ]
+    }
+  ],
+  "plugins": {}
+}

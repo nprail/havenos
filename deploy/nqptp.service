@@ -1,0 +1,12 @@
+# nqptp: the PTP clock shairport-sync needs for AirPlay 2 (and multi-room sync). Built by install-music.sh.
+[Unit]
+Description=nqptp (Network Quality PTP) for AirPlay 2
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/nqptp
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

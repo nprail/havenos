@@ -1,0 +1,19 @@
+# shairport-sync as an AirPlay 2 receiver that writes PCM and metadata to pipes for havenOS (spec 07 section 2.1).
+# havenOS must be configured with [music.airplay] manage = false so it reads these pipes instead of starting its own copy.
+[Unit]
+Description=shairport-sync (AirPlay 2) for havenOS
+After=network-online.target nqptp.service avahi-daemon.service
+Requires=nqptp.service
+Wants=network-online.target
+
+[Service]
+User=havenos
+SupplementaryGroups=audio
+# The pipes live where havenOS looks for them: <state dir>/airplay/{audio,metadata}.pipe
+ExecStartPre=/usr/bin/install -d -m 755 /var/lib/havenos/airplay
+ExecStartPre=/bin/sh -c 'for p in audio metadata; do [ -p /var/lib/havenos/airplay/$p.pipe ] || mkfifo -m 660 /var/lib/havenos/airplay/$p.pipe; done'
+ExecStart=/usr/local/bin/shairport-sync -c /etc/havenos/shairport-sync.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

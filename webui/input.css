@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@source "../src/havenos/web/index.html";
+@source "../src/havenos/web/app.js";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-bg: #0a0a0b;
+  --color-panel: #131318;
+  --color-edge: #26262e;
+  --color-ink: #f0ede8;
+  --color-muted: #9a978f;
+  --color-accent: #4a9eff;
+}
+
+@layer base {
+  body { @apply bg-bg text-ink antialiased; }
+  input, select, textarea { @apply w-full rounded-lg border border-edge bg-black/40 px-3 py-2 text-sm text-ink outline-none placeholder:text-muted/60 focus:border-accent focus:ring-1 focus:ring-accent; }
+  input[type="checkbox"] { @apply h-4 w-4 w-auto rounded accent-accent; }
+  input[type="range"] { @apply cursor-pointer border-0 bg-transparent px-0 accent-accent; }
+  label { @apply block text-sm font-medium text-ink/90; }
+  button { @apply cursor-pointer; }
+}
+
+@layer components {
+  .card { @apply rounded-2xl border border-edge bg-panel p-5 sm:p-6; }
+  .hint { @apply mt-1 text-xs text-muted; }
+  .err { @apply mt-1 text-xs text-red-400; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg border border-edge bg-white/5 px-3.5 py-2 text-sm font-medium text-ink transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply border-accent bg-accent text-black hover:bg-accent/90; }
+  .pill { @apply inline-flex items-center gap-1.5 rounded-full border border-edge px-2.5 py-0.5 text-xs text-muted; }
+}

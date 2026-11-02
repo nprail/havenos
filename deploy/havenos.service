@@ -1,0 +1,20 @@
+# havenOS display app. Runs as the `havenos` user; its state (config.toml, pairing, covers) lives in /var/lib/havenos.
+# The music daemons below run as separate units; this one only talks to them (config: [music.*] manage = false).
+[Unit]
+Description=havenOS display
+After=network-online.target nqptp.service shairport-sync.service go-librespot.service
+Wants=network-online.target
+
+[Service]
+User=havenos
+Environment=HAVENOS_CONFIG=/var/lib/havenos/config.toml
+Environment=QT_QPA_PLATFORM=eglfs
+Environment=HAVENOS_FULLSCREEN=1
+Environment=QT_QPA_EGLFS_HIDECURSOR=1
+ExecStart=/opt/havenos/.venv-sys/bin/python -m havenos
+Restart=on-failure
+RestartSec=3
+SupplementaryGroups=audio video input render
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,47 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node (docs site and the settings page's Tailwind build)
+node_modules/
+
+# Docs build output
+site/
+.docmd/
+
+# Local state and builds: dev state (config, pairing code, device id) and local builds such as shairport-sync
+.local/
+
+# Private working notes (bring-up logs with LAN addresses and device names)
+notes/
+
+# Secrets and runtime state files (the app writes these next to its config)
+.env
+*.key
+*.pem
+web_code
+device_mac
+ha_token
+immich_key
+ma_token
+esphome_key
+sendspin_identity.json
+sendspin_pairing.json
+/config.toml
+# settings saves write config.toml.bak
+*.bak
+
+# Editors, OS and agent tooling
+.DS_Store
+.idea/
+.vscode/
+*.swp
+.claude/
