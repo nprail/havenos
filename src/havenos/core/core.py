@@ -440,7 +440,10 @@ class Core:
         self._set(timers=self._timers.snapshot())
 
     def _cmd_timer_cancel(self, id: int) -> None:
-        if self._timers.cancel(int(id)):
+        r = self.state["ringing"]
+        if r and r["id"] == int(id):
+            self._cmd_timer_dismiss()
+        elif self._timers.cancel(int(id)):
             self._set(timers=self._timers.snapshot())
 
     def _local_timer(self, id: int):
@@ -460,14 +463,21 @@ class Core:
             self._set(timers=self._timers.snapshot())
 
     def _cmd_timer_dismiss(self) -> None:
+        """Stop the ringing timer (and remove it)."""
+        r = self.state["ringing"]
+        if r:
+            self._timers.cancel(r["id"])
         self._ring_deadline = None
-        self._set(ringing=None)
+        self._set(ringing=None, timers=self._timers.snapshot())
 
     def _cmd_timer_snooze(self, seconds: int) -> None:
+        """Stop the ringing and run the same timer again for `seconds`."""
         r = self.state["ringing"]
         if not r:
             return
-        self._timers.add(int(seconds), r["label"], int(self._clock() * 1000))
+        now_ms = int(self._clock() * 1000)
+        if not self._timers.snooze(r["id"], int(seconds), now_ms):
+            self._timers.add(int(seconds), r["label"], now_ms)
         self._ring_deadline = None
         self._set(ringing=None, timers=self._timers.snapshot())
 
@@ -716,7 +726,7 @@ class Core:
         now = self._clock()
         self.music.tick()
 
-        expired = None if self.state["ringing"] else self._timers.pop_expired(int(now * 1000))
+        expired = None if self.state["ringing"] else self._timers.start_ringing(int(now * 1000))
         if expired:
             self._ring_deadline = now + self.config.ring_auto_dismiss_s
             self._set(ringing=expired.to_dict(), timers=self._timers.snapshot())

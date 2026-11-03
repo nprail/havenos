@@ -22,6 +22,7 @@ Item {
         var now = Date.now(), ts = []
         for (var i = 0; i < Store.timers.length; i++) {
             var t = Store.timers[i]
+            if (t.ringing) continue                      // a ringing timer is shown full screen by Main.qml
             ts.push({ id: t.id, key: t.paused ? now + t.left * 1000 : t.end })
         }
         ts.sort(order)

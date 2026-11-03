@@ -13,7 +13,6 @@ LiveScreen 1.0 LiveScreen.qml
 MediaTile 1.0 MediaTile.qml
 TimerTile 1.0 TimerTile.qml
 TimersSheet 1.0 TimersSheet.qml
-TimerRing 1.0 TimerRing.qml
 StatsOverlay 1.0 StatsOverlay.qml
 WeatherIcon 1.0 WeatherIcon.qml
 MiniSlider 1.0 MiniSlider.qml

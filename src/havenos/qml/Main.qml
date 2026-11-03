@@ -90,7 +90,20 @@ Window {
         VoiceSheet { anchors.fill: parent; backdrop: backdrop }
         AnnouncementCard { anchors.fill: parent }
         SetupScreen { anchors.fill: parent }
-        TimerRing { anchors.fill: parent }
+        // a ringing timer is its tile, full screen over everything
+        Rectangle {
+            id: ringShade
+            anchors.fill: parent; color: "#f2000000"
+            opacity: Store.ringing !== null ? 1 : 0
+            visible: opacity > 0
+            Behavior on opacity { NumberAnimation { duration: 200 } }
+            MouseArea { anchors.fill: parent }       // swallow touches outside the ring
+            Loader {
+                anchors.fill: parent
+                active: Store.ringing !== null
+                sourceComponent: TimerTile { timerId: Store.ringing ? Store.ringing.id : -1; card: false }
+            }
+        }
         StatsOverlay { id: stats }
 
         // display power + brightness: software dimming for now (the Pi's backlight comes later). Touching a dark screen wakes it.

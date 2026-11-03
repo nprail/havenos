@@ -1,7 +1,9 @@
 import QtQuick
 
-// One timer on the live screen: a ring that empties, the time left, its name. Tapping it opens the timers control view
-// (all timers) on top. Timers that Home Assistant owns (set by voice) can be cancelled there but not paused or extended.
+// One timer: on the live screen, and full screen over everything while it rings (Main.qml). Running: pause (or resume) on the left, a big ring in the middle (the name, the time left),
+// stop on the right. Tapping the tile opens the timers control view (all timers) on top. Timers that Home Assistant owns
+// (set by voice) can be stopped but not paused, so their pause button is not shown. Ringing (time is up): the ring pulses and
+// says "Timer done!", +1 min takes the place of pause, and tapping anywhere inside the ring stops the timer.
 Item {
     id: tile
     property int timerId: -1
@@ -12,28 +14,41 @@ Item {
         for (var i = 0; i < ts.length; i++) if (ts[i].id === timerId) return ts[i]
         return null
     }
-    readonly property real secs: Store.timerSecs(t)
+    readonly property real secs: Math.max(0, Store.timerSecs(t))
     readonly property bool paused: t !== null && t.paused
-    readonly property bool wide: width >= height * 1.6
+    readonly property bool ringing: t !== null && t.ringing
+    property bool card: true                        // the tile's own panel; off when it fills the screen
+    readonly property real btn: Math.max(3.6 * u, 44)
     readonly property real k: Math.max(0.7, Math.min(1.5, Math.min(width / (34 * u), height / (26 * u))))
-    readonly property real ringSize: wide ? Math.min(height - 4 * u, width * 0.4) : Math.min(width - 4 * u, (height - 9 * u) * 1.0)
+    readonly property real ringSize: Math.max(6 * u, Math.min(height - 3 * u, width - 2 * (btn + 1.5 * u) - 1 * u))
 
     Rectangle {
+        visible: tile.card
         anchors.fill: parent; radius: 2 * u
         color: "#d9121216"; border.color: "#1affffff"; border.width: 1
     }
-    MouseArea { anchors.fill: parent; onClicked: { Store.gesture("tap"); Store.timersOpen = true } }
+    MouseArea { anchors.fill: parent; enabled: !tile.ringing; onClicked: { Store.gesture("tap"); Store.timersOpen = true } }
 
     Item {
         id: ring
-        x: tile.wide ? 2 * u + (tile.width * 0.5 - 2 * u - width) / 2 : (tile.width - width) / 2
-        y: tile.wide ? (tile.height - height) / 2 : 5.4 * u
-        width: Math.max(6 * u, tile.ringSize); height: width
+        anchors.centerIn: parent
+        width: tile.ringSize; height: width
+        Rectangle {
+            id: pulse
+            visible: tile.ringing
+            anchors.fill: parent; radius: width / 2; color: "transparent"
+            border.color: "#4a9eff"; border.width: 2
+            ParallelAnimation {                      // only while it rings: an endless animation redraws every frame
+                running: tile.ringing; loops: Animation.Infinite
+                NumberAnimation { target: pulse; property: "scale"; from: 1.0; to: 1.12; duration: 1400; easing.type: Easing.OutQuad }
+                NumberAnimation { target: pulse; property: "opacity"; from: 0.6; to: 0; duration: 1400; easing.type: Easing.OutQuad }
+            }
+        }
         Rectangle { anchors.fill: parent; anchors.margins: 0.3 * u; radius: width / 2; color: "transparent"
                     border.color: "#26ffffff"; border.width: 0.45 * u * Math.max(0.8, tile.k) }
         Canvas {
             anchors.fill: parent
-            property real frac: tile.t ? Math.max(0, Math.min(1, tile.secs / Math.max(1, tile.t.total))) : 0
+            property real frac: tile.ringing ? 1 : tile.t ? Math.max(0, Math.min(1, tile.secs / Math.max(1, tile.t.total))) : 0
             property bool paused: tile.paused
             onFracChanged: requestPaint()
             onPausedChanged: requestPaint()
@@ -49,63 +64,64 @@ Item {
         }
         Column {
             anchors.centerIn: parent
+            spacing: ring.width * 0.03
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: Store.fmt(tile.secs)
-                color: tile.paused ? "#99f0ede8" : "#f0ede8"; font.family: Store.display; font.weight: Font.ExtraLight
-                font.pixelSize: ring.width * 0.24; font.features: { "tnum": 1 }
+                width: ring.width * 0.7; elide: Text.ElideRight; horizontalAlignment: Text.AlignHCenter
+                text: tile.t ? tile.t.label : ""
+                color: "#99f0ede8"; font.family: Store.sans; font.pixelSize: Math.max(0.9 * u, ring.width * 0.055)
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: tile.paused ? "PAUSED" : (tile.t ? "of " + Store.fmt(tile.t.total) : "")
+                text: tile.ringing ? "Timer done!" : Store.fmt(tile.secs)
+                color: tile.paused ? "#99f0ede8" : "#f0ede8"; font.family: Store.display
+                font.weight: tile.ringing ? Font.Light : Font.ExtraLight
+                font.pixelSize: ring.width * (tile.ringing ? 0.105 : 0.24); font.features: { "tnum": 1 }
+            }
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                visible: tile.paused || tile.ringing
+                text: tile.ringing ? "Tap to stop" : "PAUSED"
                 color: "#99f0ede8"; font.family: Store.sans; font.pixelSize: Math.max(0.8 * u, ring.width * 0.05)
                 font.letterSpacing: 0.12 * u
             }
         }
     }
 
-    // name, and the buttons for a timer the display owns
-    Column {
-        x: tile.wide ? tile.width * 0.5 : 5 * u
-        y: tile.wide ? (tile.height - height) / 2 : 1.6 * u
-        width: tile.wide ? tile.width * 0.5 - 2 * u : tile.width - 10 * u
-        spacing: 1 * u
-        Text {
-            width: parent.width; elide: Text.ElideRight; horizontalAlignment: tile.wide ? Text.AlignLeft : Text.AlignHCenter
-            text: (tile.t ? tile.t.label : "").toUpperCase()
-            color: "#99f0ede8"; font.family: Store.sans; font.pixelSize: 0.9375 * u * Math.max(1, tile.k * 0.9); font.letterSpacing: 0.12 * u
-        }
-        Row {
-            visible: tile.wide && tile.t !== null && tile.t.local
-            spacing: 1 * u
-            Pill { text: tile.paused ? "Resume" : "Pause"; icon: tile.paused ? "play" : "pause"; primary: true
-                   onClicked: tile.paused ? Store.resumeTimer(tile.timerId) : Store.pauseTimer(tile.timerId) }
-            Pill { text: "+1 min"; onClicked: Store.extendTimer(tile.timerId, 60) }
-        }
-    }
-    // narrow tiles: the buttons go under the ring
-    Row {
-        visible: !tile.wide && tile.t !== null && tile.t.local && tile.height > 20 * u
-        anchors.horizontalCenter: parent.horizontalCenter; y: ring.y + ring.height + 0.8 * u
-        spacing: 1 * u
-        Pill { text: tile.paused ? "Resume" : "Pause"; icon: tile.paused ? "play" : "pause"; primary: true
-               onClicked: tile.paused ? Store.resumeTimer(tile.timerId) : Store.pauseTimer(tile.timerId) }
-        Pill { text: "+1 min"; onClicked: Store.extendTimer(tile.timerId, 60) }
+    // anywhere inside the ring stops a ringing timer
+    MouseArea {
+        enabled: tile.ringing
+        x: ring.x; y: ring.y; width: ring.width; height: ring.height
+        onClicked: Store.cancelTimer(tile.timerId)
     }
 
-    // dismiss: cancels this timer (works for timers Home Assistant owns too)
+    // pause / resume (+1 min while ringing), left of the ring (only for a timer the display owns)
     Tap {
-        id: dismiss
-        anchors.right: parent.right; anchors.rightMargin: 1 * u; anchors.top: parent.top; anchors.topMargin: 1 * u
-        width: Math.max(3.2 * u, 40); height: width
+        id: pauseBtn
+        visible: tile.t !== null && (tile.t.local || tile.ringing)
+        width: tile.btn; height: width
+        anchors.verticalCenter: parent.verticalCenter
+        x: (ring.x - width) / 2
+        onClicked: tile.ringing ? Store.snooze(60) : tile.paused ? Store.resumeTimer(tile.timerId) : Store.pauseTimer(tile.timerId)
+        Rectangle { anchors.fill: parent; radius: width / 2; color: "#1affffff"; border.color: "#59ffffff"; border.width: 1 }
+        Icon { visible: !tile.ringing; name: tile.paused ? "play" : "pause"; size: parent.width * 0.42; anchors.centerIn: parent }
+        Text { visible: tile.ringing; anchors.centerIn: parent; text: "+1m"; color: "#f0ede8"; font.family: Store.sans; font.pixelSize: parent.width * 0.3 }
+    }
+
+    // stop, right of the ring: cancels this timer (works for timers Home Assistant owns too)
+    Tap {
+        id: stopBtn
+        width: tile.btn; height: width
+        anchors.verticalCenter: parent.verticalCenter
+        x: ring.x + ring.width + (tile.width - ring.x - ring.width - width) / 2
         onClicked: Store.cancelTimer(tile.timerId)
-        Rectangle { anchors.fill: parent; radius: width / 2; color: "#1affffff"; border.color: "#33ffffff"; border.width: 1 }
-        Icon { name: "close"; size: Math.max(1.4 * u, 18); anchors.centerIn: parent }
+        Rectangle { anchors.fill: parent; radius: width / 2; color: "#1affffff"; border.color: "#59ffffff"; border.width: 1 }
+        Icon { name: "close"; size: parent.width * 0.42; anchors.centerIn: parent }
     }
 
     Pill {
         visible: tile.moreCount > 0
-        anchors.right: dismiss.left; anchors.rightMargin: 0.8 * u; anchors.verticalCenter: dismiss.verticalCenter
+        anchors.right: parent.right; anchors.rightMargin: 1 * u; anchors.top: parent.top; anchors.topMargin: 1 * u
         text: "+" + tile.moreCount + " more"
         onClicked: Store.timersOpen = true
     }

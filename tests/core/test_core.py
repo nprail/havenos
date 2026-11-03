@@ -82,20 +82,29 @@ async def test_timer_expiry_rings_then_auto_dismisses(core, clock):
     clock.advance(6)
     await core.tick()
     assert core.state["ringing"]["label"] == "Tea"
-    assert all(t["label"] != "Tea" for t in core.state["timers"])
+    assert [t["ringing"] for t in core.state["timers"] if t["label"] == "Tea"] == [True]     # the timer rings in place
     clock.advance(31)
     await core.tick()
     assert core.state["ringing"] is None
+    assert all(t["label"] != "Tea" for t in core.state["timers"])
 
 
-async def test_snooze_creates_new_timer(core, clock):
+async def test_snooze_restarts_the_same_timer(core, clock):
     core.handle("timer.start", seconds=5, label="Tea")
     clock.advance(6)
     await core.tick()
     core.handle("timer.snooze", seconds=60)
     assert core.state["ringing"] is None
     snoozed = [t for t in core.state["timers"] if t["label"] == "Tea"]
-    assert len(snoozed) == 1 and snoozed[0]["total"] == 60
+    assert len(snoozed) == 1 and snoozed[0]["total"] == 60 and not snoozed[0]["ringing"]
+
+
+async def test_stopping_a_ringing_timer_from_its_tile_clears_the_ring(core, clock):
+    core.handle("timer.start", seconds=5, label="Tea")
+    clock.advance(6)
+    await core.tick()
+    core.handle("timer.cancel", id=core.state["ringing"]["id"])
+    assert core.state["ringing"] is None and all(t["label"] != "Tea" for t in core.state["timers"])
 
 
 async def test_demo_control_tile_toggles_through_the_real_action_path(core):

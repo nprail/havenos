@@ -13,6 +13,7 @@ class Timer:
     paused: bool = False
     left: int = 0   # seconds remaining while paused
     local: bool = True   # False: Home Assistant owns it (a voice timer), so the display can cancel it but not pause or extend it
+    ringing: bool = False   # time is up: the timer stays in the book, shown as a ringing tile, until it is stopped or snoozed
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -75,12 +76,22 @@ class TimerBook:
         self._timers = [t for t in self._timers if t.id != timer_id]
         return len(self._timers) != before
 
-    def pop_expired(self, now_ms: int) -> Timer | None:
+    def start_ringing(self, now_ms: int) -> Timer | None:
+        """The next timer whose time is up (not paused, not already ringing), now marked as ringing."""
         for t in self._timers:
-            if not t.paused and t.end <= now_ms:
-                self._timers.remove(t)
+            if not t.paused and not t.ringing and t.end <= now_ms:
+                t.ringing = True
                 return t
         return None
+
+    def snooze(self, timer_id: int, seconds: int, now_ms: int) -> bool:
+        """Stop the ringing and run the same timer again for `seconds` (the display owns it from now on)."""
+        t = self.get(timer_id)
+        if t is None:
+            return False
+        t.ringing, t.local, t.paused = False, True, False
+        t.total, t.left, t.end = seconds, seconds, now_ms + seconds * 1000
+        return True
 
     def snapshot(self) -> list[dict]:
         return [t.to_dict() for t in self._timers]

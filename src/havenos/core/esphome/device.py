@@ -110,7 +110,7 @@ class ESPHomeDevice:
             E.Switch("blur", "Glass blur", lambda: s["blur"], icon="mdi:blur", category=E.CATEGORY_CONFIG,
                      set=lambda v: h("config.set", blur=v)),
             E.TextSensor("photo", "Current photo", lambda: (s["photo"] or {}).get("name", ""), icon="mdi:image"),
-            E.Sensor("active_timers", "Active timers", lambda: len(s["timers"]), icon="mdi:timer-outline"),
+            E.Sensor("active_timers", "Active timers", lambda: sum(1 for t in s["timers"] if not t.get("ringing")), icon="mdi:timer-outline"),
             E.Sensor("notification_count", "Notifications", lambda: len(s["notifications"]), icon="mdi:bell-outline"),
             E.TextSensor("room", "Room", lambda: (s["room"] or {}).get("name", ""), icon="mdi:floor-plan", category=E.CATEGORY_DIAGNOSTIC),
             E.TextSensor("photo_source", "Photo source", lambda: s["photo_source"], category=E.CATEGORY_DIAGNOSTIC),
