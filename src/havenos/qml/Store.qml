@@ -68,6 +68,7 @@ QtObject {
     readonly property int crossfadeMs: App.crossfadeMs
     readonly property bool screenOn: App.screenOn
     readonly property int brightness: App.brightness
+    readonly property bool backlight: App.backlight
     readonly property string webUrl: App.webUrl
     readonly property string webCode: App.webCode
     readonly property string webLink: App.webLink

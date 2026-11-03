@@ -64,8 +64,9 @@ havenOS announces itself over mDNS (`_esphomelib._tcp`, port 6053). In Home Assi
 
 | Entity | Type | What it does |
 |---|---|---|
-| Screen | switch | Display off and on (software black-out until real backlight control) |
-| Brightness | number, 10 to 100 % | UI dimming |
+| Screen | switch | Display off and on: the backlight goes to 0 (and the panel is powered down), or the interface blacks out where there is no backlight |
+| Brightness | number, 10 to 100 % | The panel's backlight (software dimming where there is none) |
+| Backlight level | sensor, % (diagnostic) | What is actually on the panel: Brightness, Screen and, later, automatic dimming combined |
 | Mode | select | `ambient` or `dashboard` |
 | Next photo, Previous photo | button | Move the playlist |
 | Current photo | text sensor | File name or Immich asset |

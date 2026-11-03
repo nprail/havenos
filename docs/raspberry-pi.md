@@ -115,6 +115,12 @@ Open `http://<pi-address>:8787` for the [settings page](settings-ui.md). On firs
 
 `--no-splash` skips all of it.
 
+## Backlight
+
+Brightness and Screen (the settings page, and Home Assistant's Brightness number and Screen switch) drive the panel's real backlight, `/sys/class/backlight/<name>/brightness`, when there is one (`[display] backlight = "auto"`; `none` dims in software). The device is writable by the `video` group through a udev rule (`deploy/90-havenos-backlight.rules`, installed by `install.sh`). Levels are percentages put through a gamma curve (`backlight_gamma`) and ramp over `backlight_fade_ms`; Screen off sets 0 and powers the panel down (`bl_power`). Checked on a Pi 4 with the 800x480 DSI panel (2026-11-02): the settings page moves the backlight (30 % is raw 29 of 255, 10 % raw 4). Not tried: the Screen switch from a real Home Assistant, and whether the lowest setting is dim enough to your eye.
+
+**Automatic dimming, later.** What the panel shows is `Core._display_level()`: the user's brightness (the ceiling) times `Core.auto_scale` (1.0 now). A light sensor only has to call `core.set_auto_scale(x)` with a smoothed 0 to 1 value; the HA "Backlight level" sensor already reports the result. Still to decide when it is built: how a manual change interacts with auto mode, and the lux-to-scale curve.
+
 ## Boot time
 
 Measured on a Pi 4 (Trixie Lite, DSI panel, 2026-11-02): the kernel is up in about 2.4 s, and the app's window is on screen about 5.9 s after the service starts, which is about 13 s after power-on (it was about 27 s). What changed:
@@ -144,7 +150,7 @@ Things that went wrong on the first Pi, and what the install script does about t
 
 These come from the project's open list:
 
-- Real backlight and screen power. Today brightness is software dimming (a DSI panel's backlight is at `/sys/class/backlight/`).
+- Automatic dimming from an ambient light sensor (the hook is there, see [Backlight](#backlight)).
 - A watchdog that restarts a hung interface.
 - The Pi gates: idle memory under 350 MB with no growth over 12 hours, at most one slow frame per 10 seconds, boot to first photo under 18 seconds, hung-GUI recovery under 15 seconds.
 - Software echo cancellation for the wake word, if a microphone board turns out to need it.

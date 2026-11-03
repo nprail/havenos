@@ -183,7 +183,7 @@ function displayCard() {
       ${field("Return to ambient after (seconds idle)", input("display.idle_s", d.idle_s, 'type="number" min="5" max="3600" step="5" inputmode="decimal"'), "", err("display.idle_s"))}
     </div>
     ${field(`Crossfade: <span class="text-accent">${(d.crossfade_ms / 1000).toFixed(1)} s</span>`, `<input type="range" min="0" max="4000" step="100" data-path="display.crossfade_ms" value="${d.crossfade_ms}">`, "How long one photo takes to dissolve into the next.", err("display.crossfade_ms"))}
-    ${field(`Brightness: <span class="text-accent">${d.brightness}%</span>`, `<input type="range" min="10" max="100" step="5" data-path="display.brightness" value="${d.brightness}">`, "Dims the screen in software. Home Assistant's Brightness control changes the same setting.", err("display.brightness"))}
+    ${field(`Brightness: <span class="text-accent">${d.brightness}%</span>`, `<input type="range" min="10" max="100" step="5" data-path="display.brightness" value="${d.brightness}">`, "Sets the panel's backlight (software dimming where there is none). Home Assistant's Brightness control changes the same setting.", err("display.brightness"))}
     <label class="flex items-center gap-2"><input type="checkbox" data-path="display.blur" ${d.blur ? "checked" : ""}> Frosted-glass blur on panels <span class="text-xs font-normal text-muted">(turn off if the screen stutters)</span></label>`);
 }
 

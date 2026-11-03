@@ -47,7 +47,7 @@ Built: AirPlay, Sendspin, Spotify Connect, Music Assistant library, arbiter, tak
 - [ ] G2 at most 1 slow frame per 10 s in crossfade, dashboard slide and waveform, with HA and prefetch running
 - [~] G3 boot to first photo under 18 s (Pi, 2026-11-02: was 63 s reboot to web UI; now the window is up about 13 s after power-on and the core finishes starting about 23 s after power-on; first photo not timed; see docs/raspberry-pi.md, "Boot time")
 - [ ] G4 hung-GUI watchdog restarts and returns to ambient in under 15 s (no watchdog code exists)
-- [ ] Real backlight and screen power (today: software dimming only; the DSI panel offers `/sys/class/backlight/10-0045`, 0 to 255)
+- [~] Real backlight and screen power: built and checked on a Pi 4 (2026-11-02): brightness and Screen drive `/sys/class/backlight`, with a fade and a udev rule for the `video` group, and a "Backlight level" HA sensor; open: try the HA Screen switch on a real HA, tune the gamma by eye, and automatic dimming from a light sensor (hook: `Core.set_auto_scale`)
 - [~] M5 first-run setup (QR pairing screen on the display and a web setup wizard built 2026-11-02; tried on a Mac and in a browser, not yet on the Pi's panel), install script for the whole app (`deploy/install.sh` written 2026-11-02; only re-run on an installed Pi, not from a blank card), soak
 - [ ] Re-profile CPU on the Pi: the Mac fix for the endless sun-icon rotation took the ambient screen from about 145% to about 2-6% of a core; check nothing else animates forever
 

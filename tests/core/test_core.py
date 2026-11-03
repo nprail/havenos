@@ -248,3 +248,31 @@ async def test_voice_timers_can_be_cancelled_on_the_display_but_not_paused_or_ex
     core.handle("voice.timer", kind=3, ha_id="t1", name="Eggs", total=600, left=0)       # HA's late "finished" is ignored
     await core.tick()
     assert core.state["ringing"] is None
+
+
+async def test_the_display_level_combines_screen_brightness_and_the_auto_scale(core):
+    assert core.state["display_level"] == 100 and core.state["backlight"] is False     # no backlight in tests: software dimming
+    core.handle("brightness.set", percent=60)
+    assert core.state["display_level"] == 60
+    core.set_auto_scale(0.5)                                  # where an ambient light sensor will plug in
+    assert core.state["display_level"] == 30
+    core.handle("screen.set", on=False)
+    assert core.state["display_level"] == 0
+    core.handle("screen.set", on=True)
+    core.set_auto_scale(1.0)
+    assert core.state["display_level"] == 60
+
+
+async def test_a_real_backlight_follows_the_display_level(core, tmp_path):
+    from havenos.core.backlight import Backlight
+    d = tmp_path / "bl"
+    d.mkdir()
+    (d / "max_brightness").write_text("200"); (d / "brightness").write_text("200")
+    core._backlight = Backlight(d, gamma=1.0)
+    core.handle("brightness.set", percent=50)
+    await asyncio.sleep(0.6)                                  # the fade takes backlight_fade_ms
+    assert (d / "brightness").read_text() == "100"
+    core.handle("screen.set", on=False)
+    await asyncio.sleep(0.6)
+    assert (d / "brightness").read_text() == "0"
+    core._backlight.close()

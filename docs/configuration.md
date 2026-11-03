@@ -82,7 +82,10 @@ Used when `source = "immich"` and both a URL and a key are set.
 | `idle_s` | `30` | `HAVENOS_IDLE` | Seconds before the dashboard returns to the ambient screen |
 | `crossfade_ms` | `1500` | `HAVENOS_CROSSFADE` | Photo crossfade |
 | `blur` | `true` | `HAVENOS_BLUR` | Glass blur behind panels |
-| `brightness` | `100` | `HAVENOS_BRIGHTNESS` | Percent, 10 to 100 (software dimming for now) |
+| `brightness` | `100` | `HAVENOS_BRIGHTNESS` | Percent, 10 to 100: the panel's backlight, or software dimming where there is none |
+| `backlight` | `auto` | `HAVENOS_BACKLIGHT` | `auto` (the first one in `/sys/class/backlight`), a name or path, or `none` (dim in software) |
+| `backlight_gamma` | `1.8` | | Percent to raw curve of the panel; raise it if the lowest settings look too bright |
+| `backlight_fade_ms` | `400` | | How long a change of level takes |
 
 Seconds per photo, crossfade, brightness and blur can also be changed from Home Assistant, and those changes are written back to this file. Screen on/off, mode and the current photo are not saved: the display always starts awake on the ambient screen.
 

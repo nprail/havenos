@@ -60,7 +60,7 @@ class AppModel(QObject):
     _NOTIFY = {
         "mode": "modeChanged", "photo": "photoChanged", "photo_source": "photoSourceChanged",
         "media": "mediaChanged", "music": "musicChanged", "library": "libraryChanged", "weather": "weatherChanged", "controls": "controlsChanged",
-        "ha_status": "haStatusChanged", "crossfade_ms": "crossfadeChanged", "screen_on": "screenChanged", "brightness": "screenChanged",
+        "ha_status": "haStatusChanged", "crossfade_ms": "crossfadeChanged", "screen_on": "screenChanged", "brightness": "screenChanged", "backlight": "screenChanged",
         "room": "roomChanged", "rooms": "roomsChanged", "room_selected": "roomSelectedChanged", "room_view": "roomViewChanged",
         "announcement": "announcementChanged", "notifications": "notificationsChanged", "ha_exposure": "exposureChanged", "web": "webChanged", "setup_done": "webChanged", "timers": "timersChanged", "ringing": "ringingChanged",
         "voice": "voiceChanged", "voice_ready": "voiceChanged", "voice_muted": "voiceChanged", "transcript": "transcriptChanged", "response": "responseChanged",
@@ -115,6 +115,7 @@ class AppModel(QObject):
     haExposure = Property("QVariant", lambda s: s._s["ha_exposure"], notify=exposureChanged)
     screenOn = Property(bool, lambda s: s._s["screen_on"], notify=screenChanged)
     brightness = Property(int, lambda s: s._s["brightness"], notify=screenChanged)
+    backlight = Property(bool, lambda s: s._s["backlight"], notify=screenChanged)      # a real backlight is driven: no software dimming
     webUrl = Property(str, lambda s: (s._s["web"] or {}).get("url", ""), notify=webChanged)
     webCode = Property(str, lambda s: (s._s["web"] or {}).get("code", ""), notify=webChanged)
     webLink = Property(str, lambda s: (s._s["web"] or {}).get("link", ""), notify=webChanged)

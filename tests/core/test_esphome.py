@@ -48,7 +48,7 @@ async def test_identity_and_handshake(client):
 async def test_lists_entities_with_categories_and_services(client):
     ents, services = await entities(client)
     assert {"screen", "brightness", "mode", "next_photo", "previous_photo", "photo_interval", "crossfade", "blur",
-            "photo", "active_timers", "photo_source", "ha_link", "memory", "loop_lag", "cached_photos", "touch", "notification_count", "room"} <= set(ents)
+            "photo", "active_timers", "photo_source", "ha_link", "memory", "loop_lag", "cached_photos", "touch", "notification_count", "room", "backlight_level"} <= set(ents)
     assert ents["memory"].entity_category.name == "DIAGNOSTIC" and ents["blur"].entity_category.name == "CONFIG"
     assert ents["brightness"].min_value == 10 and ents["brightness"].max_value == 100 and ents["brightness"].unit_of_measurement == "%"
     assert ents["mode"].options == ["ambient", "dashboard"]

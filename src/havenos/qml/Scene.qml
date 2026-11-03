@@ -100,10 +100,11 @@ Item {
     }
     StatsOverlay { id: stats }
 
-    // display power + brightness: software dimming for now (the Pi's backlight comes later). Touching a dark screen wakes it.
+    // display power + brightness: with a real backlight (Core drives it) this only black-outs and catches the touch that wakes
+    // a dark screen; without one it also dims in software. Touching a dark screen wakes it.
     Rectangle {
         anchors.fill: parent; z: 90; color: "black"
-        opacity: Store.screenOn ? (1 - Store.brightness / 100) * 0.85 : 1
+        opacity: Store.screenOn ? (Store.backlight ? 0 : (1 - Store.brightness / 100) * 0.85) : 1
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: 300 } }
         MouseArea { anchors.fill: parent; enabled: !Store.screenOn; onPressed: Store.activity() }

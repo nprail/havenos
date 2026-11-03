@@ -24,6 +24,7 @@ from .media import MediaCoordinator
 from .media.art import ArtCache
 from .playlist import LocalSource, Playlist
 from .stats import LoopLagMonitor, rss_mb
+from .backlight import Backlight
 from .timers import TimerBook
 from .voice import simulate_assist
 
@@ -56,6 +57,10 @@ class Core:
         self._sleep = sleep
         self._executor = executor
         self._timers = TimerBook()
+        self._backlight = Backlight.find(config.backlight, config.backlight_gamma)      # None: dim in software
+        if self._backlight is not None:
+            log.info("backlight: driving %s (raw 0..%d)", self._backlight.name, self._backlight.max)
+        self.auto_scale = 1.0                                # 0..1 from an ambient light sensor, once there is one
         self._tasks: list[asyncio.Task] = []
         self._voice_task: asyncio.Task | None = None
         self.voice: "VoiceSatellite | None" = None          # the real satellite, when voice is on (else the scripted demo)
@@ -95,8 +100,10 @@ class Core:
             "blur": config.blur,
             "stats": config.stats,
             "crossfade_ms": config.crossfade_ms,
-            "screen_on": True,         # software "display off": the UI draws black (real backlight control comes later)
-            "brightness": config.brightness,   # percent; the UI dims with a black overlay
+            "screen_on": True,         # display off: the backlight goes to 0, or the UI draws black without one
+            "brightness": config.brightness,   # percent the user chose (the ceiling; see _display_level)
+            "backlight": self._backlight is not None,   # True: a real backlight is driven, so the UI does not dim in software
+            "display_level": config.brightness,         # percent actually on the panel (brightness, screen and auto scale combined)
             "photo_interval_s": config.photo_interval_s,
             "web": None,               # {"url", "code", "link", "qr"} once the settings server is up (the setup screen and HUD)
             "setup_done": config.setup_done,   # first-run setup finished: until then the display shows the pairing QR code
@@ -218,6 +225,7 @@ class Core:
 
     async def start(self) -> None:
         cfg = self.config
+        self._apply_display(fade=False)                      # the panel takes the configured level at once
         self._playlist = self._make_playlist()
         now = self._clock()
         self._cycle_deadline = now + cfg.photo_interval_s
@@ -294,6 +302,8 @@ class Core:
         return photo.to_dict() if photo else None
 
     async def stop(self) -> None:
+        if self._backlight is not None:
+            self._backlight.close()
         if self.voice:
             await self.voice.stop()
         running = [*self._tasks, *self._jobs, *([self._voice_task] if self._voice_task else [])]
@@ -713,6 +723,27 @@ class Core:
         self.bus.emit("state.patch", patch=patch)
         if "ringing" in patch or "announcement" in patch or "voice" in patch or "voice_busy" in patch:
             self._update_duck()
+        if "screen_on" in patch or "brightness" in patch:
+            self._apply_display()
+
+    def _display_level(self) -> float:
+        """What the panel should show, 0..100: nothing while the screen is off, else the user's brightness scaled by the
+        automatic factor (`auto_scale`, 1.0 until an ambient light sensor sets it: the user's brightness is the ceiling)."""
+        s = self.state
+        return 0.0 if not s["screen_on"] else float(s["brightness"]) * min(1.0, max(0.0, self.auto_scale))
+
+    def _apply_display(self, fade: bool = True) -> None:
+        level = self._display_level()
+        if self._backlight is not None:
+            self._backlight.fade_to(level, self.config.backlight_fade_ms if fade else 0)
+        if self.state.get("display_level") != round(level):
+            self.state["display_level"] = round(level)
+            self.bus.emit("state.patch", patch={"display_level": round(level)})
+
+    def set_auto_scale(self, scale: float) -> None:
+        """Where an ambient light sensor plugs in: 1.0 is the user's brightness, lower dims below it."""
+        self.auto_scale = min(1.0, max(0.0, float(scale)))
+        self._apply_display()
 
     def _update_duck(self) -> None:
         """Music steps back while a timer rings, an announcement is up or the assistant is talking."""

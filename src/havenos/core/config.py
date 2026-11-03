@@ -83,6 +83,9 @@ class Config:
     prefetch: int = 2                   # photos prepared ahead of the one on screen
     crossfade_ms: int = 1500
     brightness: int = 100               # percent, 10-100
+    backlight: str = "none"             # `auto` (the first one in /sys/class/backlight), a name or path, or `none` (dim in software)
+    backlight_gamma: float = 1.8        # percent -> raw curve of the panel's backlight
+    backlight_fade_ms: int = 400        # how long a change of level takes
     web_enabled: bool = True            # settings web UI
     setup_done: bool = False            # first-run setup finished ([setup] done, or Home Assistant is already configured)
     web_host: str = "0.0.0.0"
@@ -190,6 +193,9 @@ class Config:
             ha=ha, immich=immich, nasa=nasa,
             crossfade_ms=int(os.environ.get("HAVENOS_CROSSFADE", disp.get("crossfade_ms", 1500))),
             brightness=min(100, max(10, int(os.environ.get("HAVENOS_BRIGHTNESS", disp.get("brightness", 100))))),
+            backlight=os.environ.get("HAVENOS_BACKLIGHT", str(disp.get("backlight", "auto"))),
+            backlight_gamma=float(disp.get("backlight_gamma", 1.8)),
+            backlight_fade_ms=int(disp.get("backlight_fade_ms", 400)),
             setup_done=bool(toml.get("setup", {}).get("done")) or ha is not None,
             web_enabled=_env_bool("HAVENOS_WEB", bool(web.get("enabled", True))),
             web_host=os.environ.get("HAVENOS_WEB_HOST", web.get("host", "0.0.0.0")),

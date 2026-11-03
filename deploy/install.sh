@@ -174,6 +174,11 @@ else
   echo "skipped (--no-trim)"
 fi
 
+say "Backlight"
+install -m 644 "$PREFIX/deploy/90-havenos-backlight.rules" /etc/udev/rules.d/90-havenos-backlight.rules
+udevadm control --reload-rules
+udevadm trigger --subsystem-match=backlight --action=add || true
+
 say "Services"
 mkdir -p /var/log/journal                       # keep logs across reboots (a crash is otherwise gone)
 systemd-tmpfiles --create --prefix /var/log/journal || true

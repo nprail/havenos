@@ -8,8 +8,9 @@ Pattern source: OHF-Voice/linux-voice-assistant (Apache-2.0). Its lesson: a plai
 
 | Entity | Type | Category | Drives |
 |---|---|---|---|
-| Screen | switch | | display off/on (software black-out until real backlight control) |
-| Brightness | number 10-100 % | | UI dimming (saved) |
+| Screen | switch | | display off/on (the backlight, or a software black-out without one) |
+| Brightness | number 10-100 % | | the backlight level, the ceiling for automatic dimming (saved) |
+| Backlight level | sensor % | diagnostic | what is on the panel (brightness x screen x auto scale) |
 | Mode | select ambient/dashboard | | what the screen shows |
 | Next photo / Previous photo | button | | photo playlist |
 | Current photo | text sensor | | file name or Immich asset |

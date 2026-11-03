@@ -43,6 +43,9 @@ photo_interval_s = 8
 idle_s = 30
 crossfade_ms = 1500        # photo crossfade
 blur = true
+backlight = "auto"        # the panel's backlight: auto (first in /sys/class/backlight), a name, or none (dim in software)
+# backlight_gamma = 1.8    # percent -> raw curve; raise it if the lowest settings are too bright
+# backlight_fade_ms = 400
 
 [web]
 enabled = true

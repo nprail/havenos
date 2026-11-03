@@ -97,6 +97,8 @@ class ESPHomeDevice:
                      set=lambda v: h("screen.set", on=v)),
             E.Number("brightness", "Brightness", lambda: s["brightness"], icon="mdi:brightness-6",
                      min_value=10, max_value=100, step=5, unit="%", set=lambda v: h("brightness.set", percent=v)),
+            E.Sensor("backlight_level", "Backlight level", lambda: s["display_level"], icon="mdi:brightness-percent",
+                     category=E.CATEGORY_DIAGNOSTIC, unit="%"),      # what is on the panel: Brightness x Screen x (later) auto dimming
             E.Select("mode", "Mode", lambda: s["mode"] if s["mode"] in ("ambient", "dashboard") else "dashboard", icon="mdi:view-dashboard", options=["ambient", "dashboard"],
                      set=lambda v: h("mode.set", mode=v)),
             E.Button("next_photo", "Next photo", icon="mdi:skip-next", press=lambda: h("photo.next", delta=1)),
