@@ -6,6 +6,8 @@
 #   sudo ./deploy/install.sh                       # from a checkout: installs that checkout
 #   sudo ./deploy/install.sh --repo URL --ref TAG  # another fork, branch or tag
 #   sudo ./deploy/install.sh --no-airplay          # skip the AirPlay 2 build (about 10 minutes on a Pi 4)
+#   sudo ./deploy/install.sh --no-splash           # leave the boot screen and console alone
+#   sudo ./deploy/install.sh --no-trim             # leave cloud-init and the other boot services alone
 #
 # What it does: apt packages (Debian's Qt 6.8 and PySide6: the pip PySide6 wheel cannot run EGLFS on aarch64, see
 # docs/raspberry-pi.md, "Notes from bring-up"), the `havenos` user, the code in /opt/havenos, a venv that uses the system PySide6,
@@ -20,6 +22,8 @@ SRC="${HAVENOS_SRC:-}"
 PREFIX=/opt/havenos
 STATE=/var/lib/havenos
 AIRPLAY=1
+SPLASH=1
+TRIM=1
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -27,7 +31,9 @@ while [[ $# -gt 0 ]]; do
     --ref) REF="$2"; shift 2 ;;
     --src) SRC="$2"; shift 2 ;;
     --no-airplay) AIRPLAY=0; shift ;;
-    -h|--help) sed -n 2,16p "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --no-splash) SPLASH=0; shift ;;
+    --no-trim) TRIM=0; shift ;;
+    -h|--help) sed -n 2,18p "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown option: $1 (try --help)" >&2; exit 2 ;;
   esac
 done
@@ -53,7 +59,7 @@ apt-get update
 apt-get install -y --no-install-recommends \
   git rsync ca-certificates curl python3 python3-venv python3-pip ffmpeg avahi-daemon avahi-utils libportaudio2 \
   libegl1 libgles2 libgbm1 libdrm2 libinput10 libxkbcommon0 libfontconfig1 libdbus-1-3 libglib2.0-0 \
-  libasound2-plugins alsa-utils fonts-dejavu-core fonts-noto-color-emoji \
+  libasound2-plugins alsa-utils fonts-dejavu-core fonts-noto-color-emoji plymouth \
   qt6-qpa-plugins qt6-svg-plugins \
   python3-pyside6.qtcore python3-pyside6.qtgui python3-pyside6.qtqml python3-pyside6.qtquick python3-pyside6.qttest \
   qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-effects qml6-module-qtquick-window \
@@ -123,6 +129,49 @@ else
   } > "$STATE/config.toml"
   chown havenos:havenos "$STATE/config.toml"; chmod 600 "$STATE/config.toml"
   echo "wrote $STATE/config.toml"
+fi
+
+say "Boot screen"
+# A Pi shows the firmware's rainbow, then kernel text and a login prompt, until the app is up. This replaces them with a
+# Plymouth animation that stays until havenOS draws its first frame. Undo: restore the *.havenos-orig files, then
+# `systemctl unmask getty@tty1`, `plymouth-set-default-theme -R bgrt` and remove /etc/systemd/system/plymouth-quit.service.d
+if [[ $SPLASH == 1 ]]; then
+  BOOT=/boot/firmware
+  [[ -d $BOOT ]] || BOOT=/boot
+  theme=/usr/share/plymouth/themes/havenos
+  install -d "$theme"
+  install -m 644 "$PREFIX"/deploy/plymouth/havenos/* "$theme"/
+  install -d /etc/systemd/system/plymouth-quit.service.d
+  install -m 644 "$PREFIX/deploy/plymouth/havenos-boot.conf" /etc/systemd/system/plymouth-quit.service.d/havenos.conf
+  if [[ -f $BOOT/config.txt && -f $BOOT/cmdline.txt ]]; then
+    for f in config.txt cmdline.txt; do [[ -f $BOOT/$f.havenos-orig ]] || cp -p "$BOOT/$f" "$BOOT/$f.havenos-orig"; done
+    grep -q '^disable_splash=' $BOOT/config.txt || printf '\n# havenOS: no rainbow splash\ndisable_splash=1\n' >> $BOOT/config.txt
+    cmd="$(tr -d '\n' < $BOOT/cmdline.txt)"
+    cmd="${cmd//console=tty1/console=tty3}"                                  # kernel messages off the display
+    for arg in quiet splash plymouth.ignore-serial-consoles logo.nologo vt.global_cursor_default=0 loglevel=3; do
+      [[ " $cmd " == *" $arg "* ]] || cmd="$cmd $arg"
+    done
+    printf '%s\n' "$cmd" > $BOOT/cmdline.txt
+  else
+    echo "no $BOOT/config.txt or cmdline.txt: boot options left alone (add: quiet splash logo.nologo vt.global_cursor_default=0 loglevel=3)"
+  fi
+  systemctl mask getty@tty1.service                                           # no login prompt under the splash
+  plymouth-set-default-theme havenos
+  update-initramfs -u >/dev/null 2>&1 || true                                 # splash from the initramfs, when there is one
+else
+  echo "skipped (--no-splash)"
+fi
+
+say "Faster boot"
+# Off the boot path: cloud-init (about 3 s; it only applies the imager's first-boot settings), waiting for the network
+# (about 6 s; the display does not need it) and console/keyboard setup (no keyboard on this device). Undo: remove
+# /etc/cloud/cloud-init.disabled and `systemctl unmask` the units below.
+if [[ $TRIM == 1 ]]; then
+  [[ -d /etc/cloud ]] && touch /etc/cloud/cloud-init.disabled
+  systemctl mask NetworkManager-wait-online.service keyboard-setup.service console-setup.service 2>/dev/null || true
+  systemctl disable man-db.timer e2scrub_all.timer 2>/dev/null || true
+else
+  echo "skipped (--no-trim)"
 fi
 
 say "Services"

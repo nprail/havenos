@@ -6,11 +6,12 @@ set properties directly. If the core ever moves off this thread, hop with a queu
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import Property, QObject, QUrl, Signal, Slot
 
-from ..core import Core, Event
+if TYPE_CHECKING:                  # annotations only: importing the core here would make importing this module slow
+    from ..core import Core, Event
 
 
 class AppModel(QObject):

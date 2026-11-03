@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=havenOS
+Description=havenOS boot animation: the sun, its rays turning a step at a time
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/havenos
+ScriptFile=/usr/share/plymouth/themes/havenos/havenos.script

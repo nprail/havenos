@@ -1,0 +1,61 @@
+# havenOS boot splash. Dark background, the app's sun in the middle, its rays turning 30 degrees at a time (the same
+# motion as SunIcon.qml, so the hand-over to the app's own BootSplash.qml is not a jump), and the name below.
+# The sun is 20% of the shorter screen side, as in BootSplash.qml.
+
+Window.SetBackgroundTopColor(0.039, 0.039, 0.043);
+Window.SetBackgroundBottomColor(0.039, 0.039, 0.043);
+
+screen_w = Window.GetWidth();
+screen_h = Window.GetHeight();
+cx = screen_w / 2;
+size = Math.Min(screen_w, screen_h) * 0.20;
+cy = screen_h / 2 - size * 0.25;
+
+core_img = Image("sun-core.png");
+core_img = core_img.Scale(size, size);
+rays_src = Image("sun-rays.png");
+rays_src = rays_src.Scale(size, size);
+word_img = Image("wordmark.png");
+word_w = size * 1.9;
+word_img = word_img.Scale(word_w, word_w * word_img.GetHeight() / word_img.GetWidth());
+
+core = Sprite(core_img);
+core.SetX(cx - size / 2);
+core.SetY(cy - size / 2);
+core.SetZ(10);
+
+rays = Sprite();
+rays.SetZ(9);
+
+word = Sprite(word_img);
+word.SetX(cx - word_img.GetWidth() / 2);
+word.SetY(cy + size * 0.9);
+word.SetZ(10);
+word.SetOpacity(0);
+
+frame = 0;
+PERIOD = 60;        # frames per step (about 1.2 s at 50 fps)
+MOVE = 36;          # frames spent turning
+
+fun refresh() {
+    step = Math.Int(frame / PERIOD);
+    t = (frame - step * PERIOD) / MOVE;
+    if (t > 1) t = 1;
+    eased = t * t * (3 - 2 * t);
+    angle = ((step % 12) + eased) * Math.Pi / 6;
+    img = rays_src.Rotate(angle);
+    rays.SetImage(img);
+    rays.SetX(cx - img.GetWidth() / 2);
+    rays.SetY(cy - img.GetHeight() / 2);
+
+    core.SetOpacity(0.85 + 0.15 * Math.Sin(frame * 0.07));
+    fade = frame / 40;
+    if (fade > 1) fade = 1;
+    word.SetOpacity(fade * 0.85);
+    frame++;
+}
+Plymouth.SetRefreshFunction(refresh);
+
+# Messages and passwords are not shown: this display has no keyboard during boot.
+fun message_cb(text) { }
+Plymouth.SetMessageFunction(message_cb);

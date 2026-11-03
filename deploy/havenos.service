@@ -2,15 +2,22 @@
 # The music daemons below run as separate units; this one only talks to them (config: [music.*] manage = false).
 [Unit]
 Description=havenOS display
-After=network-online.target nqptp.service shairport-sync.service go-librespot.service
-Wants=network-online.target
+# Not ordered after the network or the music daemons: the display starts as soon as the system is up (a boot that
+# waited for network-online started the app about 13 s later). Home Assistant and the music daemons are retried/picked
+# up by the app when they appear; the AirPlay pipes are created by the app if shairport-sync has not yet.
 
 [Service]
+# notify: ready = the window has drawn its first frame; the boot splash (Plymouth) stays up until then.
+Type=notify
+NotifyAccess=main
+TimeoutStartSec=120
 User=havenos
 Environment=HAVENOS_CONFIG=/var/lib/havenos/config.toml
 Environment=QT_QPA_PLATFORM=eglfs
 Environment=HAVENOS_FULLSCREEN=1
 Environment=QT_QPA_EGLFS_HIDECURSOR=1
+# Root lets go of the display (the boot splash only answers root); the image stays up until the window draws over it.
+ExecStartPre=-+/usr/bin/plymouth deactivate
 ExecStart=/opt/havenos/.venv-sys/bin/python -m havenos
 Restart=on-failure
 RestartSec=3

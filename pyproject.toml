@@ -24,7 +24,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.setuptools.package-data]
-havenos = ["qml/*", "assets/**/*", "web/*"]
+havenos = ["qml/*", "qml/boot/*", "assets/**/*", "web/*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

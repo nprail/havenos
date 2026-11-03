@@ -45,7 +45,7 @@ Built: AirPlay, Sendspin, Spotify Connect, Music Assistant library, arbiter, tak
 - [~] M1 EGLFS on the Pi; photo pipeline in a process pool: EGLFS runs on a Pi 4 (Debian Qt 6.8, GPU, the 800x480 DSI panel) and the pool runs (2026-11-02, docs/raspberry-pi.md; the PySide6 pip wheel cannot do EGLFS on aarch64); frame pacing not measured
 - [ ] G1 idle RSS under 350 MB, no growth over 12 h (Mac: about 180 MB; Pi, first 2 minutes: main process about 300 MB, about 515 MB with the two photo workers; say which one the gate means; no long run yet)
 - [ ] G2 at most 1 slow frame per 10 s in crossfade, dashboard slide and waveform, with HA and prefetch running
-- [ ] G3 boot to first photo under 18 s (Pi, 2026-11-02: reboot to web UI 63 s, 25 s of it system boot and about 37 s the app; first photo later still; far over the gate)
+- [~] G3 boot to first photo under 18 s (Pi, 2026-11-02: was 63 s reboot to web UI; now the window is up about 13 s after power-on and the core finishes starting about 23 s after power-on; first photo not timed; see docs/raspberry-pi.md, "Boot time")
 - [ ] G4 hung-GUI watchdog restarts and returns to ambient in under 15 s (no watchdog code exists)
 - [ ] Real backlight and screen power (today: software dimming only; the DSI panel offers `/sys/class/backlight/10-0045`, 0 to 255)
 - [~] M5 first-run setup (QR pairing screen on the display and a web setup wizard built 2026-11-02; tried on a Mac and in a browser, not yet on the Pi's panel), install script for the whole app (`deploy/install.sh` written 2026-11-02; only re-run on an installed Pi, not from a blank card), soak

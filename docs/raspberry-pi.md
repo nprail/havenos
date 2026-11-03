@@ -104,6 +104,28 @@ sudo systemctl enable --now nqptp shairport-sync go-librespot havenos
 
 Open `http://<pi-address>:8787` for the [settings page](settings-ui.md). On first boot the display shows a QR code: scan it with your phone to sign in and follow the guided setup. The address and code are written under it, and the gear on the dashboard shows it again.
 
+## Boot screen
+
+`install.sh` replaces the firmware rainbow, the kernel text and the login prompt with an animation (the sun, its rays turning a step at a time, the name), which stays up until havenOS draws its first frame. It is a Plymouth theme (`deploy/plymouth/havenos`, images made by `scripts/build_plymouth.py`), and it only runs during boot. What the script changes:
+
+- `config.txt`: `disable_splash=1` (no rainbow).
+- `cmdline.txt`: `quiet splash plymouth.ignore-serial-consoles logo.nologo vt.global_cursor_default=0 loglevel=3`, and `console=tty1` becomes `console=tty3`. The originals are kept as `*.havenos-orig`.
+- `getty@tty1` is masked (no login prompt under the splash; SSH is unchanged). Undo with `systemctl unmask getty@tty1`.
+- `havenos.service` runs `plymouth deactivate` as root just before the app starts (Plymouth only answers root, and Qt's EGLFS opens the display at start, so the splash must let go first; its image stays up). It is `Type=notify`: the app opens its window at once and says ready on its first frame, and a drop-in makes `plymouth-quit` wait for that and quit with `--retain-splash` (a plain quit blanks the display under the app: every page flip fails). `BootSplash.qml` shows the same picture, still moving, until the first photo is up.
+
+`--no-splash` skips all of it.
+
+## Boot time
+
+Measured on a Pi 4 (Trixie Lite, DSI panel, 2026-11-02): the kernel is up in about 2.4 s, and the app's window is on screen about 5.9 s after the service starts, which is about 13 s after power-on (it was about 27 s). What changed:
+
+- `havenos.service` no longer waits for `network-online` or the music daemons (they made the app start about 13 s late). Home Assistant is retried by the app, and the app creates the AirPlay pipes if `shairport-sync` has not yet.
+- `install.sh` disables cloud-init (about 3 s on the boot path) and masks `NetworkManager-wait-online`, `keyboard-setup` and `console-setup` (`--no-trim` skips this).
+- The window opens first, with a splash that needs nothing from the core (`qml/boot/`); the heavy imports (aiohttp, aioesphomeapi, the core) run in a thread meanwhile, and the interface (`Scene.qml`) loads into the same window when the core is ready. `startup:` lines in the journal show the timings (`journalctl -u havenos -b | grep startup:`).
+- Things that matter if you change `main.py`: the photo workers must be forked before Qt starts; Qt modules must be imported on the main thread; the `App` singleton must be registered before the QML engine exists.
+
+Still to do for the 18 s first-photo gate: the core takes about 5 s to start after the window (photos, Home Assistant), and importing Qt itself takes about 2.5 s cold.
+
 ## Notes from bring-up
 
 Things that went wrong on the first Pi, and what the install script does about them:
@@ -116,7 +138,7 @@ Things that went wrong on the first Pi, and what the install script does about t
 - **mDNS:** AirPlay and Sendspin need `avahi-daemon`. Check what the Pi advertises with `avahi-browse -art` (package `avahi-utils`).
 - **Logs:** a Pi image has no persistent journal. `install.sh` turns it on (`/var/log/journal`), so a crash or a Wi-Fi drop leaves a trail.
 - **Wi-Fi:** if the display drops off the network, Wi-Fi power saving is a common cause on a Pi (`nmcli connection modify <name> 802-11-wireless.powersave 2`).
-- **Memory:** about 300 MB resident for the main process plus about 110 MB for each of two photo workers, in the first minutes on a 2 GB Pi 4. Boot to the settings page answering takes about a minute (25 s system, the rest the app).
+- **Memory:** about 275 MB resident for the main process plus about 40 MB for each of two photo workers (the workers are forked before Qt starts, so they stay small), in the first minutes on a 2 GB Pi 4.
 
 ## What is not done yet
 
